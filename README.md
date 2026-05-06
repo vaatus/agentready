@@ -2,7 +2,7 @@
 
 > **The public adversarial benchmark for AI agents.** We scan every famous open-source AI agent against OWASP ASI-2026, name and shame the failures, then auto-fix them with formal verification, chaos engineering, and a live PR. Powered by AMD MI300X.
 
-[![Live Demo](https://img.shields.io/badge/demo-agentready.dev-blue)](https://agentready.dev) [![Video](https://img.shields.io/badge/video-YouTube-red)](https://youtu.be/PLACEHOLDER) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![AMD MI300X](https://img.shields.io/badge/Powered%20by-AMD%20MI300X-ED1C24)](https://www.amd.com/en/developer.html)
+[![Live Demo](https://img.shields.io/badge/demo-agentready.dev-blue)](https://agentready.dev) [![HF Space](https://img.shields.io/badge/🤗-Judge%20Space-yellow)](https://huggingface.co/spaces/vaatus/agentready-judge-demo) [![HF LoRA](https://img.shields.io/badge/🤗-Chaos%20LoRA-yellow)](https://huggingface.co/vaatus/agentready-chaos-remediation-lora-v0) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![AMD MI300X](https://img.shields.io/badge/Powered%20by-AMD%20MI300X-ED1C24)](https://www.amd.com/en/developer.html)
 
 AMD Developer Hackathon submission (lablab.ai, May 2026).
 
