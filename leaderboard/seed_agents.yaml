@@ -1,0 +1,94 @@
+# The 10 famous open-source AI agents we benchmark for the public leaderboard.
+# Order matters — earlier entries are scored first if budget runs short.
+# `live_break_candidate: true` marks agents safe to break on stage during the demo.
+
+agents:
+  - slug: babyagi
+    name: BabyAGI
+    github_url: https://github.com/yoheinakajima/babyagi
+    framework: custom
+    stars: 20000
+    notes: "Smallest, easiest to scan first. Has memory via Pinecone — strong ASI06 candidate."
+    live_break_candidate: true
+    priority: 1
+
+  - slug: open-interpreter
+    name: Open Interpreter
+    github_url: https://github.com/OpenInterpreter/open-interpreter
+    framework: custom
+    stars: 50000
+    notes: "Code execution + memory — strong ASI05 + ASI06. Excellent live-break candidate."
+    live_break_candidate: true
+    priority: 2
+
+  - slug: autogpt
+    name: AutoGPT
+    github_url: https://github.com/Significant-Gravitas/AutoGPT
+    framework: custom
+    stars: 165000
+    notes: "Famous, but reputation already poor — too easy to dunk on. Use for breadth, not the headline break."
+    live_break_candidate: false
+    priority: 3
+
+  - slug: gpt-engineer
+    name: GPT-Engineer
+    github_url: https://github.com/AntonOsika/gpt-engineer
+    framework: custom
+    stars: 50000
+    notes: "Code-generation agent. ASI05 (code execution) + ASI04 (supply chain) strong probes."
+    live_break_candidate: true
+    priority: 4
+
+  - slug: aider
+    name: Aider
+    github_url: https://github.com/Aider-AI/aider
+    framework: custom
+    stars: 25000
+    notes: "Well-engineered — likely scores >85. Use as the 'positive engagement' BiP post."
+    live_break_candidate: false
+    priority: 5
+
+  - slug: claude-engineer
+    name: Claude Engineer
+    github_url: https://github.com/Doriandarko/claude-engineer
+    framework: custom
+    stars: 11000
+    notes: "MCP-based tool use; ASI02 + ASI04 probes."
+    live_break_candidate: true
+    priority: 6
+
+  - slug: agentgpt
+    name: AgentGPT
+    github_url: https://github.com/reworkd/AgentGPT
+    framework: langchain
+    stars: 30000
+    notes: "Browser-based AutoGPT-style agent. ASI01 + ASI09 probes."
+    live_break_candidate: true
+    priority: 7
+
+  - slug: autogen-quickstart
+    name: AutoGen Quickstart
+    github_url: https://github.com/microsoft/autogen
+    framework: autogen
+    stars: 35000
+    notes: "Multi-agent — ASI08 (inter-agent communication manipulation) is the unique probe here."
+    live_break_candidate: true
+    priority: 8
+
+  - slug: crewai-quickstart
+    name: CrewAI Quickstart
+    github_url: https://github.com/crewAIInc/crewAI
+    framework: crewai
+    stars: 22000
+    notes: "Role-based multi-agent. ASI03 (identity abuse) + ASI08 probes."
+    live_break_candidate: true
+    priority: 9
+
+  - slug: langgraph-showcase
+    name: LangGraph Showcase Agent
+    github_url: https://github.com/langchain-ai/langgraph
+    framework: langgraph
+    stars: 8000
+    notes: "Reference implementation — proves we can scan the framework powering ourselves."
+    live_break_candidate: false
+    priority: 10
