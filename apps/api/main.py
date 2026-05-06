@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from apps.api.core.config import get_settings
 from apps.api.db.session import init_db
-from apps.api.routes import evaluate, health, leaderboard, remediate
+from apps.api.routes import evaluate, health, leaderboard, remediate, twins
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -41,6 +41,7 @@ def create_app() -> FastAPI:
     app.include_router(leaderboard.router, tags=["leaderboard"])
     app.include_router(evaluate.router, tags=["evaluate"])
     app.include_router(remediate.router, tags=["remediate"])
+    app.include_router(twins.router, tags=["twins"])
     return app
 
 
