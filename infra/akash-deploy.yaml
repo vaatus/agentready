@@ -1,0 +1,68 @@
+# AgentReady backend — Akash Network SDL deployment manifest
+#
+# Deploys the FastAPI backend to a decentralized GPU-adjacent host on Akash.
+# The GPU inference endpoints (Judge + Red LLM) live separately on AMD
+# Developer Cloud MI300X; this manifest pins only the application service.
+#
+# Usage:
+#   provider-services tx deployment create infra/akash-deploy.yaml \
+#     --from $AKASH_KEY_NAME --node $AKASH_NODE
+#
+# Provider lease + manifest send is handled by the helper script:
+#   ./infra/deploy.sh
+
+---
+version: "2.0"
+
+services:
+  agentready-api:
+    image: ghcr.io/vaatus/agentready:latest
+    expose:
+      - port: 8000
+        as: 80
+        to:
+          - global: true
+    env:
+      - POSTGRES_URL=sqlite+aiosqlite:////data/agentready.db
+      - JUDGE_MODE=vllm
+      - JUDGE_LLM_URL=https://mi300x-host.example.dev/v1
+      - JUDGE_LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
+      - RED_LLM_URL=https://mi300x-host.example.dev/v1
+      - RED_LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
+      - HF_TOKEN
+      - GITHUB_TOKEN
+    params:
+      storage:
+        data:
+          mount: /data
+          readOnly: false
+
+profiles:
+  compute:
+    agentready-api:
+      resources:
+        cpu:
+          units: 2.0
+        memory:
+          size: 4Gi
+        storage:
+          - size: 4Gi
+          - name: data
+            size: 16Gi
+            attributes:
+              persistent: true
+              class: beta3
+  placement:
+    decentralised:
+      attributes:
+        host: akash
+      pricing:
+        agentready-api:
+          denom: uakt
+          amount: 10000
+
+deployment:
+  agentready-api:
+    decentralised:
+      profile: agentready-api
+      count: 1
