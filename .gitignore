@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# uv
+uv.lock
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+.pnp.*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AgentReady runtime artifacts
+/tmp/agentready/
+/data/
+data/clones/
+data/leaderboard_cache/
+data/lora_adapters/*.safetensors
+agentready.db
+agentready.db-journal
+*.pdf
+!docs/**/*.pdf
+*.smt2.cache
+attack_payloads/cache/
+
+# Logs / metrics
+*.log
+logs/
+langfuse-data/
+otel-data/
+
+# DB
+*.sqlite
+*.sqlite3
+*.db
+postgres-data/
+
+# HuggingFace
+.cache/huggingface/
+hf_cache/
+
+# Secrets safety net
+*.pem
+*.key
+secrets/
+
+# Local-only planning, validation, handoff docs (never pushed)
+docs-local/

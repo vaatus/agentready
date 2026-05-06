@@ -1,0 +1,47 @@
+# Local dev infra — Postgres for state, Langfuse for observability.
+# Inference services (vLLM Judge + Red LLM) run on MI300X via separate containers,
+# not started by this compose file.
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: agentready-postgres
+    environment:
+      POSTGRES_USER: agentready
+      POSTGRES_PASSWORD: agentready
+      POSTGRES_DB: agentready
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentready"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  langfuse:
+    image: langfuse/langfuse:latest
+    container_name: agentready-langfuse
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://agentready:agentready@postgres:5432/agentready
+      NEXTAUTH_SECRET: dev-only-not-for-production
+      NEXTAUTH_URL: http://localhost:3001
+      SALT: dev-salt
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+
+  # MindsDB digital-twin data layer (sponsor — checks the box).
+  mindsdb:
+    image: mindsdb/mindsdb:latest
+    container_name: agentready-mindsdb
+    ports:
+      - "47334:47334"
+      - "47335:47335"
+    volumes:
+      - ./mindsdb-data:/root/mdb_storage
+    restart: unless-stopped
