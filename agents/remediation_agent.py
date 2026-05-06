@@ -24,6 +24,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from agents.github_pr import GitHubPRError, detect_auth, open_pr
 from agents.llm_clients import JudgeClient
 from apps.api.core.config import get_settings
 from apps.api.core.ingest import AgentManifest
@@ -443,7 +444,7 @@ async def remediate(
     (bundle_dir / "manifest.json").write_text(json.dumps(manifest_json, indent=2))
     files["manifest.json"] = "manifest.json"
 
-    return RemediationBundle(
+    bundle = RemediationBundle(
         slug=manifest.slug,
         scan_id=scan_id,
         bundle_dir=bundle_dir,
@@ -453,3 +454,21 @@ async def remediate(
         diff_preview=diff_preview,
         asi_categories_addressed=sorted({a.category for a in failed_attacks}),
     )
+
+    # If GitHub auth is available, open a real PR against a fork in our namespace.
+    if detect_auth() is not None:
+        try:
+            bundle.pr_url = open_pr(
+                upstream_url=manifest.github_url,
+                bundle_dir=bundle_dir,
+                scan_id=scan_id,
+                pr_title=pr_title,
+                pr_body=pr_body,
+            )
+            logger.info("opened PR: %s", bundle.pr_url)
+        except GitHubPRError as e:
+            logger.warning("PR creation failed (bundle still on disk): %s", e)
+        except Exception:  # noqa: BLE001 - never let PR failure block the bundle
+            logger.exception("unexpected error opening PR")
+
+    return bundle
