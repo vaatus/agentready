@@ -2,7 +2,9 @@
 FROM node:20-alpine AS builder
 
 WORKDIR /app
-RUN corepack enable
+# Pin pnpm to a known-good version — corepack's auto-update pulls bleeding-edge
+# variants that crash on node 20.
+RUN npm install -g pnpm@10.18.0
 
 # Copy only what's needed to install deps for better cache hits.
 COPY apps/web/package.json apps/web/pnpm-lock.yaml ./
@@ -13,7 +15,7 @@ RUN pnpm build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
-RUN corepack enable
+RUN npm install -g pnpm@10.18.0
 
 ENV NODE_ENV=production
 ENV PORT=3000

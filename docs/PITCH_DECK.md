@@ -11,14 +11,14 @@
 # AgentReady
 ## The public adversarial benchmark for AI agents
 
-**6 of 10 famous open-source AI agents fail OWASP ASI-2026.**
+**9 of 10 famous open-source AI agents fail OWASP ASI-2026.**
 Here's the proof.
 
 > AMD Developer Hackathon · lablab.ai · May 2026 · Powered by AMD MI300X
 
 ---
 
-## Slide 1 — The 6-of-10 problem
+## Slide 1 — The 9-of-10 problem
 
 OWASP published the **Top 10 for Agentic Applications 2026** in December.
 A new industry standard for AI agent security.
@@ -29,11 +29,11 @@ Headline numbers (live at [134.199.203.147:3000](http://134.199.203.147:3000)):
 
 | Rank | Agent | OWASP ASI-2026 |
 |---|---|---|
-| 1 | Claude Engineer | 78.0 |
-| 2 | Aider | 73.3 |
-| 3 | BabyAGI | 72.5 |
+| 1 | AutoGPT | 70.4 |
+| 2 | Claude Engineer | 69.6 |
+| 3 | Aider | 69.5 |
 | ... | ... | ... |
-| 10 | AutoGen Quickstart | 58.7 |
+| 10 | AutoGen Quickstart | 58.8 |
 
 Every agent above with score < 70 has a memory-poisoning vulnerability that
 manipulates it into executing forbidden actions. We caught all of them.
@@ -80,7 +80,7 @@ REMEDIATION → patched system prompt (Qwen-authored guard rules) + Z3 contract
 ## Slide 4 — Live demo (3 acts)
 
 **Act 1 (0:00–1:00)** — Open [134.199.203.147:3000](http://134.199.203.147:3000).
-Headline: *"6 of 10 famous open-source AI agents fail OWASP ASI-2026."* 10 named rows.
+Headline: *"9 of 10 famous open-source AI agents fail OWASP ASI-2026."* 10 named rows.
 Click BabyAGI.
 
 **Act 2 (1:00–3:00)** — Per-agent page:
