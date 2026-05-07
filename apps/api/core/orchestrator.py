@@ -26,7 +26,7 @@ from owasp_asi.asi06_memory_poisoning import Asi06Result, run_asi06
 from owasp_asi.asi06_self_modifying import run_asi06_novel
 from owasp_asi.asi09_human_trust import run_asi09
 from owasp_asi.stub_scores import StubScore, stub_scores_for
-from verification.z3_engine import Z3Report, run_all
+from verification.z3_engine import Z3Report, run_all_with_auto
 
 logger = logging.getLogger(__name__)
 
@@ -156,8 +156,8 @@ async def run_scan(
         scores = sorted(live_scores + stub_scores_list, key=lambda c: c.category)
         result.asi_scores = scores
 
-        # ---- Step 4: Z3 verification ----
-        z3 = run_all(manifest)
+        # ---- Step 4: Z3 verification (with NL→SMT auto-formalization) ----
+        z3 = await run_all_with_auto(manifest)
         result.z3_report = z3
 
         # ---- Step 5: chaos resilience (deterministic surface; live runs separately) ----
