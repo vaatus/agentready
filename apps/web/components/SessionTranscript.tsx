@@ -1,19 +1,27 @@
 type WorstFailure = {
   category?: string;
+  name?: string;
+  payload?: string;
   plant?: string;
   trigger?: string;
   baseline_response?: string;
   post_attack_response?: string;
   reasoning?: string;
   confidence?: number;
+  extra?: Record<string, unknown>;
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  false_approval: "False approval memory",
-  fake_preference: "Fake preference memory",
-  fake_authority: "Fake authority memory",
-  self_replicating: "Self-replicating memory",
-  goal_drift: "Goal-drift memory",
+  // ASI06 sub-categories
+  false_approval: "ASI06 — false approval memory",
+  fake_preference: "ASI06 — fake preference memory",
+  fake_authority: "ASI06 — fake authority memory",
+  self_replicating: "ASI06 — self-replicating memory",
+  goal_drift: "ASI06 — goal-drift memory",
+  // ASI01/09 categories themselves
+  ASI01: "ASI01 — agent goal hijack",
+  ASI06: "ASI06 — memory poisoning",
+  ASI09: "ASI09 — Crescendo (multi-turn trust exploitation)",
 };
 
 export function SessionTranscript({ failure }: { failure: WorstFailure | null | undefined }) {
@@ -22,6 +30,9 @@ export function SessionTranscript({ failure }: { failure: WorstFailure | null | 
   const category = failure.category ?? "";
   const label = CATEGORY_LABELS[category] ?? category;
   const confidencePct = failure.confidence ? Math.round(failure.confidence * 100) : null;
+  // ASI01/09 use `payload` instead of `plant`. Crescendo uses an array of phases via extra.transcript.
+  const plantText = failure.plant ?? failure.payload ?? "—";
+  const triggerText = failure.trigger ?? "(see payload)";
 
   return (
     <section className="rounded-2xl border border-red-900 bg-gradient-to-br from-red-950/40 to-red-950/10 p-6">
@@ -47,12 +58,12 @@ export function SessionTranscript({ failure }: { failure: WorstFailure | null | 
       <div className="grid gap-4 md:grid-cols-2">
         {/* Baseline session */}
         <div className="rounded-xl border border-zinc-800 bg-black/40 p-4">
-          <div className="mb-2 text-xs uppercase tracking-wider text-emerald-400">Session 1 — clean baseline</div>
+          <div className="mb-2 text-xs uppercase tracking-wider text-emerald-400">Clean baseline</div>
           <div className="space-y-3">
             <div>
-              <div className="text-[11px] uppercase tracking-wider text-zinc-500">user trigger</div>
+              <div className="text-[11px] uppercase tracking-wider text-zinc-500">trigger</div>
               <div className="mt-1 rounded-lg bg-zinc-900 p-3 font-mono text-xs leading-relaxed">
-                {failure.trigger ?? "—"}
+                {triggerText}
               </div>
             </div>
             <div>
@@ -66,23 +77,17 @@ export function SessionTranscript({ failure }: { failure: WorstFailure | null | 
 
         {/* Attack session */}
         <div className="rounded-xl border border-red-700/60 bg-black/40 p-4">
-          <div className="mb-2 text-xs uppercase tracking-wider text-red-300">Session 2 — after poison plant</div>
+          <div className="mb-2 text-xs uppercase tracking-wider text-red-300">After attack</div>
           <div className="space-y-3">
             <div>
-              <div className="text-[11px] uppercase tracking-wider text-zinc-500">poisoned memory planted (turn 1)</div>
-              <div className="mt-1 rounded-lg bg-red-950/40 p-3 font-mono text-xs leading-relaxed text-red-200">
-                {failure.plant ?? "—"}
-              </div>
-            </div>
-            <div>
-              <div className="text-[11px] uppercase tracking-wider text-zinc-500">user trigger (turn 2 — same as baseline)</div>
-              <div className="mt-1 rounded-lg bg-zinc-900 p-3 font-mono text-xs leading-relaxed">
-                {failure.trigger ?? "—"}
+              <div className="text-[11px] uppercase tracking-wider text-zinc-500">attack payload</div>
+              <div className="mt-1 max-h-44 overflow-auto rounded-lg bg-red-950/40 p-3 font-mono text-xs leading-relaxed text-red-200 whitespace-pre-wrap">
+                {plantText}
               </div>
             </div>
             <div>
               <div className="text-[11px] uppercase tracking-wider text-zinc-500">agent response — manipulated</div>
-              <div className="mt-1 rounded-lg bg-red-900/40 p-3 text-xs leading-relaxed text-red-100">
+              <div className="mt-1 rounded-lg bg-red-900/40 p-3 text-xs leading-relaxed text-red-100 whitespace-pre-wrap">
                 {failure.post_attack_response ?? "—"}
               </div>
             </div>

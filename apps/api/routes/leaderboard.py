@@ -49,6 +49,7 @@ async def get_agent(slug: str, session: AsyncSession = Depends(get_session)) -> 
 
     asi_scores: list[dict] = []
     worst_failure: dict | None = None
+    worst_failures_by_category: list[dict] = []  # one per live category
     chaos_cells: list[dict] = []
     if latest_run is not None:
         score_stmt = select(AsiScore).where(AsiScore.scan_run_id == latest_run.id).order_by(AsiScore.category)
@@ -62,8 +63,14 @@ async def get_agent(slug: str, session: AsyncSession = Depends(get_session)) -> 
                     "passed_attacks_count": len(row.passed_attacks or []),
                 }
             )
-            if row.worst_failure and worst_failure is None:
-                worst_failure = row.worst_failure
+            if row.worst_failure:
+                worst_failures_by_category.append(row.worst_failure)
+        # Pick the highest-confidence failure across all live categories.
+        if worst_failures_by_category:
+            worst_failure = max(
+                worst_failures_by_category,
+                key=lambda w: float(w.get("confidence") or 0.0),
+            )
 
         chaos_stmt = (
             select(ChaosRun)
@@ -101,5 +108,6 @@ async def get_agent(slug: str, session: AsyncSession = Depends(get_session)) -> 
         else None,
         "asi_scores": asi_scores,
         "worst_failure": worst_failure,
+        "worst_failures_by_category": worst_failures_by_category,
         "chaos_cells": chaos_cells,
     }
