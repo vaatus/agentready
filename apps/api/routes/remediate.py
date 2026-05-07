@@ -117,6 +117,7 @@ async def trigger_remediate(slug: str, session: AsyncSession = Depends(get_sessi
         )
     ).scalars().all()
     failed_attacks = _hydrate_failed_attacks(list(score_rows))
+    asi06_score = next((r.score for r in score_rows if r.category == "ASI06"), None)
 
     z3_rows = (
         await session.execute(select(Z3Result).where(Z3Result.scan_run_id == latest_run.id))
@@ -133,6 +134,7 @@ async def trigger_remediate(slug: str, session: AsyncSession = Depends(get_sessi
         failed_attacks=failed_attacks,
         z3_report=z3_report,  # type: ignore[arg-type]  - structural duck-typing on .contracts
         z3_status=latest_run.z3_status,
+        pre_asi06_score=asi06_score,
     )
 
     return {

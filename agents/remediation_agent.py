@@ -377,6 +377,7 @@ async def remediate(
     z3_report: Z3Report | None,
     z3_status: str | None,
     judge: JudgeClient | None = None,
+    pre_asi06_score: float | None = None,
 ) -> RemediationBundle:
     """Generate the full remediation bundle on disk and return its manifest."""
     settings = get_settings()
@@ -388,11 +389,7 @@ async def remediate(
         judge = JudgeClient.from_settings()
         own_judge = True
 
-    try:
-        rules = await _generate_guard_rules(judge, failed_attacks)
-    finally:
-        if own_judge and hasattr(judge, "aclose"):
-            await judge.aclose()
+    rules = await _generate_guard_rules(judge, failed_attacks)
 
     patched_prompt = _patched_system_prompt(manifest.system_prompt, rules)
     diff_preview = _diff_preview(manifest.system_prompt, patched_prompt)
@@ -469,7 +466,7 @@ async def remediate(
         diff_preview=diff_preview,
         asi_categories_addressed=sorted({a.category for a in failed_attacks}),
         patched_system_prompt=patched_prompt,
-        pre_fix_asi06_score=pre_score,
+        pre_fix_asi06_score=pre_asi06_score,
     )
 
     # ---- Validate the fix: re-run ASI06 against the patched prompt ----
@@ -506,5 +503,12 @@ async def remediate(
             logger.warning("PR creation failed (bundle still on disk): %s", e)
         except Exception:  # noqa: BLE001 - never let PR failure block the bundle
             logger.exception("unexpected error opening PR")
+
+    # Close the judge AFTER post-fix validation + PR creation are done.
+    if own_judge and hasattr(judge, "aclose"):
+        try:
+            await judge.aclose()
+        except Exception:  # noqa: BLE001
+            pass
 
     return bundle

@@ -49,7 +49,13 @@ def _run(cmd: list[str], *, cwd: Path | None = None, check: bool = True, env: di
 
 
 def detect_auth() -> GhContext | None:
-    """Returns a GhContext if either the gh CLI is authed or GITHUB_TOKEN is set."""
+    """Returns a GhContext if either the gh CLI is authed or GITHUB_TOKEN is set.
+
+    In containers we rely on GH_TOKEN env (gh CLI reads it). On dev laptops
+    we use the user's existing gh auth.
+    """
+    import os
+
     try:
         r = _run(["gh", "auth", "status"], check=False)
         if r.returncode == 0:
@@ -62,7 +68,18 @@ def detect_auth() -> GhContext | None:
                 return GhContext(user=user, via_cli=True)
     except FileNotFoundError:
         pass
-    # PyGithub fallback could go here. For now, require gh CLI.
+
+    # Token-based path: GITHUB_TOKEN works for both gh CLI and PyGithub.
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        # gh CLI reads GH_TOKEN automatically; surface the user from the API.
+        os.environ.setdefault("GH_TOKEN", token)
+        try:
+            r = _run(["gh", "api", "user", "-q", ".login"], check=False)
+            if r.returncode == 0 and r.stdout.strip():
+                return GhContext(user=r.stdout.strip(), via_cli=True)
+        except FileNotFoundError:
+            pass
     return None
 
 
@@ -77,12 +94,21 @@ def _parse_owner_repo(github_url: str) -> tuple[str, str]:
 
 
 def _ensure_fork(ctx: GhContext, owner: str, repo: str) -> str:
-    """Fork upstream → ctx.user/{repo}. Returns the fork's clone URL."""
+    """Fork upstream → ctx.user/{repo}. Returns the fork's clone URL.
+
+    HTTPS with token-in-URL when GH_TOKEN is set (container path).
+    SSH otherwise (dev laptop with ~/.ssh keys).
+    """
+    import os
+
     target = f"{ctx.user}/{repo}"
     # Probe for existing fork. Idempotent.
     r = _run(["gh", "repo", "view", target, "--json", "name"], check=False)
     if r.returncode != 0:
         _run(["gh", "repo", "fork", f"{owner}/{repo}", "--clone=false"])
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        return f"https://x-access-token:{token}@github.com/{target}.git"
     return f"git@github.com:{target}.git"
 
 

@@ -35,7 +35,8 @@ services:
       - RED_LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
       - PUBLIC_BASE_URL=http://${PUBLIC_HOST:-127.0.0.1}:3000
       - HF_TOKEN=${HF_TOKEN}
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GH_TOKEN=${GH_TOKEN}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-${GH_TOKEN:-}}
     volumes:
       - agentready-data:/data
     command: ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8002"]
