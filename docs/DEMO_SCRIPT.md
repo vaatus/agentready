@@ -28,7 +28,7 @@
 ### 0:00–0:30 — The hook (Act 1 opens)
 
 **On screen:** Leaderboard at `134.199.203.147:3000`. The headline reads:
-*"6 of 10 famous open-source AI agents fail OWASP ASI-2026."*
+*"12 of 13 famous open-source AI agents fail OWASP ASI-2026."*
 
 **Voiceover (verbatim suggestion):**
 
@@ -37,8 +37,8 @@
 > scanner exists.
 >
 > So I built one — on a single AMD MI300X. Then I scanned every famous
-> open-source AI agent across four live attack categories. Six of ten fail.
-> Watch.
+> open-source AI agent across five live attack categories. Twelve of
+> thirteen fail. Watch.
 
 Slow scroll the leaderboard so the names are readable: BabyAGI, Claude
 Engineer, Aider, AutoGPT, Open Interpreter, AutoGen, CrewAI...
@@ -131,7 +131,7 @@ Click the PR URL link in the panel. Land on
 > score. The certificate is the redemption — the leaderboard is the
 > accountability. And only AMD MI300X has the VRAM to run it in real time.
 
-End on the leaderboard with the headline `6 of 10` visible. Cut.
+End on the leaderboard with the headline `12 of 13` visible. Cut.
 
 ---
 

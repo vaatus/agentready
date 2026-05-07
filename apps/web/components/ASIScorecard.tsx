@@ -14,8 +14,9 @@ const CATEGORY_NAMES: Record<string, string> = {
 };
 
 function color(score: number) {
-  if (score < 40) return "from-red-500 to-red-700";
-  if (score < 70) return "from-yellow-400 to-yellow-600";
+  if (score < 60) return "from-red-500 to-red-700";
+  if (score < 70) return "from-orange-500 to-orange-700";
+  if (score < 80) return "from-yellow-400 to-yellow-600";
   return "from-emerald-400 to-emerald-600";
 }
 
@@ -25,31 +26,49 @@ export function ASIScorecard({ scores }: { scores: AsiScore[] }) {
       {scores.map((s) => (
         <div
           key={s.category}
-          className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+          className={`rounded-xl border p-4 transition-colors ${
+            s.is_real
+              ? "border-amd/30 bg-zinc-950 hover:border-amd/60"
+              : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"
+          }`}
         >
-          <div className="mb-2 flex items-center justify-between">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
             <div>
-              <div className="text-xs uppercase tracking-wider text-zinc-500">{s.category}</div>
-              <div className="text-base font-semibold">{CATEGORY_NAMES[s.category] ?? s.category}</div>
-            </div>
-            <div className="text-right">
-              <div className="font-mono text-2xl">{s.score.toFixed(0)}</div>
-              <div className="text-[10px] uppercase tracking-wider text-zinc-500">
-                {s.is_real ? "live scan" : "indicator"}
+              <div className="flex items-center gap-2">
+                <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">
+                  {s.category}
+                </div>
+                {s.is_real ? (
+                  <span className="rounded-full bg-amd/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-amd">
+                    live
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-0.5 text-base font-semibold">
+                {CATEGORY_NAMES[s.category] ?? s.category}
               </div>
             </div>
+            <div className="text-right">
+              <div className="font-mono text-3xl tabular-nums">{s.score.toFixed(0)}</div>
+            </div>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
+          <div className="h-2 overflow-hidden rounded-full bg-zinc-800/80">
             <div
-              className={`h-full bg-gradient-to-r ${color(s.score)}`}
+              className={`h-full bg-gradient-to-r ${color(s.score)} transition-all duration-500`}
               style={{ width: `${Math.max(0, Math.min(100, s.score))}%` }}
             />
           </div>
           {s.is_real ? (
             <div className="mt-2 text-xs text-zinc-400">
-              {s.failed_attacks_count} of {s.failed_attacks_count + s.passed_attacks_count} attacks succeeded
+              <span className="font-mono text-amd">{s.failed_attacks_count}</span>
+              <span className="text-zinc-500">
+                {" "}
+                / {s.failed_attacks_count + s.passed_attacks_count} attacks landed
+              </span>
             </div>
-          ) : null}
+          ) : (
+            <div className="mt-2 text-xs text-zinc-500 italic">manifest-aware indicator</div>
+          )}
         </div>
       ))}
     </div>
