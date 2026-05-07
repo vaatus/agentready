@@ -1,0 +1,53 @@
+# Production deploy of the AgentReady backend + frontend on the same
+# AMD Developer Cloud MI300X instance that's already serving Qwen via vLLM.
+#
+# Backend talks to the existing vllm-qwen container via the host network
+# (the vllm container is bound to 0.0.0.0:8001).
+#
+#   docker compose -f infra/docker-compose.deploy.yml up -d --build
+#
+# Public surface:
+#   :3000 → Next.js frontend
+#   :8002 → FastAPI backend
+#   :8001 → vLLM Qwen (already running, separate container)
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: infra/rocm.Dockerfile
+    image: agentready-api:latest
+    container_name: agentready-api
+    network_mode: host
+    environment:
+      - POSTGRES_URL=sqlite+aiosqlite:////data/agentready.db
+      - JUDGE_MODE=vllm
+      - JUDGE_LLM_URL=http://localhost:8001/v1
+      - JUDGE_LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
+      - RED_LLM_URL=http://localhost:8001/v1
+      - RED_LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
+      - PUBLIC_BASE_URL=http://${PUBLIC_HOST:-localhost}:3000
+      - HF_TOKEN=${HF_TOKEN}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      - agentready-data:/data
+    command: ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8002"]
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/web.Dockerfile
+    image: agentready-web:latest
+    container_name: agentready-web
+    network_mode: host
+    environment:
+      - AGENTREADY_API_URL=http://localhost:8002
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    restart: unless-stopped
+    depends_on:
+      - api
+
+volumes:
+  agentready-data:
