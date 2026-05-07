@@ -14,9 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY pyproject.toml ./
-RUN pip install --upgrade pip && pip install -e ".[dev]" && pip install aiosqlite
 
+# Copy source first so the editable install can find the package layout.
+COPY pyproject.toml README.md LICENSE ./
 COPY apps ./apps
 COPY agents ./agents
 COPY owasp_asi ./owasp_asi
@@ -24,6 +24,8 @@ COPY chaos ./chaos
 COPY verification ./verification
 COPY digital_twins ./digital_twins
 COPY leaderboard ./leaderboard
+
+RUN pip install --upgrade pip && pip install -e ".[dev]" && pip install aiosqlite
 
 RUN mkdir -p /data && chown -R 1000:1000 /data
 
