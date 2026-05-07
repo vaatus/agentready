@@ -68,6 +68,15 @@ export type RemediationBundle = {
   artifact_url_prefix: string;
 };
 
+export async function runLiveChaos(slug: string): Promise<{ slug: string; cells: ChaosCell[]; grade: string }> {
+  const res = await fetch(`${API_URL}/agent/${encodeURIComponent(slug)}/chaos/run-live`, {
+    method: "POST",
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`POST /chaos/run-live → ${res.status}`);
+  return res.json();
+}
+
 export async function fetchLatestRemediation(slug: string): Promise<RemediationBundle | null> {
   const res = await fetch(`${API_URL}/agent/${encodeURIComponent(slug)}/remediation/latest`, {
     cache: "no-store",

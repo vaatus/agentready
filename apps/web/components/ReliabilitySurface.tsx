@@ -1,6 +1,8 @@
-import { Fragment } from "react";
+"use client";
 
-import type { ChaosCell } from "@/lib/api";
+import { Fragment, useState } from "react";
+
+import { runLiveChaos, type ChaosCell } from "@/lib/api";
 
 function color(p: number): string {
   // Pass-rate to colour: 1.0 emerald → 0.5 yellow → 0.0 red.
@@ -11,7 +13,11 @@ function color(p: number): string {
   return "bg-red-600";
 }
 
-export function ReliabilitySurface({ cells }: { cells: ChaosCell[] }) {
+export function ReliabilitySurface({ slug, cells: initialCells }: { slug: string; cells: ChaosCell[] }) {
+  const [cells, setCells] = useState<ChaosCell[]>(initialCells);
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   if (cells.length === 0) {
     return (
       <div className="text-xs text-zinc-500">No chaos cells yet — run a scan.</div>
@@ -23,6 +29,27 @@ export function ReliabilitySurface({ cells }: { cells: ChaosCell[] }) {
 
   function cellAt(eps: number, lam: number): ChaosCell | undefined {
     return cells.find((c) => c.epsilon === eps && c.lambda_ === lam);
+  }
+
+  async function runLive() {
+    setRunning(true);
+    setError(null);
+    try {
+      const result = await runLiveChaos(slug);
+      // Merge live cells (ε=0 row) onto the existing grid.
+      const liveByLambda = new Map(result.cells.map((c) => [c.lambda_, c]));
+      const merged = cells.map((c) => {
+        if (c.epsilon === 0 && liveByLambda.has(c.lambda_)) {
+          return { ...liveByLambda.get(c.lambda_)!, epsilon: 0 };
+        }
+        return c;
+      });
+      setCells(merged);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setRunning(false);
+    }
   }
 
   return (
@@ -61,10 +88,24 @@ export function ReliabilitySurface({ cells }: { cells: ChaosCell[] }) {
           </Fragment>
         ))}
       </div>
-      <div className="text-[10px] text-zinc-500">
-        Pass@1 across input perturbation rate ε and fault injection rate λ.
-        From <a href="https://arxiv.org/abs/2601.06112" className="text-zinc-400 underline" target="_blank" rel="noreferrer">ReliabilityBench (arXiv 2601.06112)</a>.
+      <div className="flex items-center justify-between">
+        <div className="text-[10px] text-zinc-500">
+          Pass@1 across input perturbation rate ε and fault injection rate λ.
+          From <a href="https://arxiv.org/abs/2601.06112" className="text-zinc-400 underline" target="_blank" rel="noreferrer">ReliabilityBench (arXiv 2601.06112)</a>.
+        </div>
+        <button
+          onClick={runLive}
+          disabled={running}
+          className="rounded border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] uppercase tracking-wider text-amd hover:bg-amd/20 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {running ? "running…" : "Run live (rate-limit row)"}
+        </button>
       </div>
+      {error ? (
+        <div className="rounded border border-red-900 bg-red-950/40 px-3 py-1 text-xs text-red-300">
+          {error}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -81,7 +81,7 @@ export default async function AgentPage({ params }: { params: { slug: string } }
             Chaos engineering for AI agents — same methodology as Netflix Chaos Monkey,
             but applied to LLM-driven workflows.
           </p>
-          <ReliabilitySurface cells={agent.chaos_cells} />
+          <ReliabilitySurface slug={agent.slug} cells={agent.chaos_cells} />
         </section>
       ) : null}
 
