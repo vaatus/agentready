@@ -106,13 +106,13 @@ async def run_scan(
         result.repo_sha = manifest.repo_sha
         result.manifest = manifest
 
-        # ---- Step 2: live ASI runs in parallel — ASI01, ASI06, ASI09 ----
+        # ---- Step 2: live ASI runs sequentially per category to keep KV cache
+        # pressure manageable on the shared 7B. Each module is internally
+        # bounded by its own semaphore.
         session_factory = make_session_factory(manifest)
-        asi06_task = asyncio.create_task(run_asi06(manifest, session_factory, judge=judge, red_llm=red_llm))
-        asi01_task = asyncio.create_task(run_asi01(manifest, session_factory, judge=judge, red_llm=red_llm))
-        asi09_task = asyncio.create_task(run_asi09(manifest, session_factory, judge=judge))
-
-        asi06, asi01, asi09 = await asyncio.gather(asi06_task, asi01_task, asi09_task)
+        asi06 = await run_asi06(manifest, session_factory, judge=judge, red_llm=red_llm)
+        asi01 = await run_asi01(manifest, session_factory, judge=judge, red_llm=red_llm)
+        asi09 = await run_asi09(manifest, session_factory, judge=judge)
         result.asi06_detail = asi06
         result.live_results = {"ASI01": asi01, "ASI09": asi09}
 

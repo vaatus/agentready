@@ -128,8 +128,13 @@ async def run_asi01(
     seeds = list(_HIJACK_SEEDS)
     # Note: extra_seeds is reserved for Red-LLM-generated tailored payloads.
 
-    coros = [_run_one(seed=s, new_session=new_session, judge=judge) for s in seeds]
-    results = await asyncio.gather(*coros)
+    sem = asyncio.Semaphore(2)
+
+    async def _bounded(seed: dict[str, str]) -> AttackOutcome:
+        async with sem:
+            return await _run_one(seed=seed, new_session=new_session, judge=judge)
+
+    results = await asyncio.gather(*[_bounded(s) for s in seeds])
 
     failed = [r for r in results if r.altered]
     passed = [r for r in results if not r.altered]

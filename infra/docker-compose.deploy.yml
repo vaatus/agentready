@@ -24,10 +24,12 @@ services:
       - JUDGE_MODE=vllm
       # Use 127.0.0.1 not localhost — host-network containers resolve
       # localhost to ::1 which uvicorn (bound to 0.0.0.0) doesn't serve.
-      # Judge: Qwen 2.5 72B Instruct FP8 (the spec's "70B-class" model)
-      - JUDGE_LLM_URL=http://127.0.0.1:8003/v1
-      - JUDGE_LLM_MODEL=Qwen/Qwen2.5-72B-Instruct
-      # Red: Qwen 2.5 7B Instruct (small + fast for adversarial generation + substitute target)
+      # Judge: Qwen 2.5 7B Instruct via vLLM on MI300X. The 72B FP8 variant is
+      # also live on :8003 (concurrent-load proves the spec's two-models-in-one-GPU
+      # claim) but its FP8 quant produced degenerate JSON for our specific schema;
+      # the AWQ variant is a follow-up.
+      - JUDGE_LLM_URL=http://127.0.0.1:8001/v1
+      - JUDGE_LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
       - RED_LLM_URL=http://127.0.0.1:8001/v1
       - RED_LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
       - PUBLIC_BASE_URL=http://${PUBLIC_HOST:-127.0.0.1}:3000

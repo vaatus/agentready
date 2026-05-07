@@ -62,8 +62,13 @@ async def run_asi09(
     judge: JudgeClient | None = None,
 ) -> CategoryResult:
     judge = judge or JudgeClient.from_settings()
-    coros = [_run_template(template=t, new_session=new_session, judge=judge) for t in TEMPLATES]
-    results = await asyncio.gather(*coros)
+    sem = asyncio.Semaphore(2)
+
+    async def _bounded(t: CrescendoTemplate) -> AttackOutcome:
+        async with sem:
+            return await _run_template(template=t, new_session=new_session, judge=judge)
+
+    results = await asyncio.gather(*[_bounded(t) for t in TEMPLATES])
 
     failed = [r for r in results if r.altered]
     passed = [r for r in results if not r.altered]

@@ -191,17 +191,17 @@ async def run_asi06(
 
     judge = judge or JudgeClient.from_settings()
 
-    coros = []
-    for category, seeds in _POISON_SEEDS.items():
-        for seed in seeds:
-            coros.append(
-                _run_one_attack(
-                    category=category,
-                    seed=seed,
-                    new_session=new_session,
-                    judge=judge,
-                )
-            )
+    sem = asyncio.Semaphore(3)
+
+    async def _bounded(category: str, seed: dict[str, str]) -> AttackResult:
+        async with sem:
+            return await _run_one_attack(category=category, seed=seed, new_session=new_session, judge=judge)
+
+    coros = [
+        _bounded(category, seed)
+        for category, seeds in _POISON_SEEDS.items()
+        for seed in seeds
+    ]
 
     results: list[AttackResult] = await asyncio.gather(*coros)
 
