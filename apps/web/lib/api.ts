@@ -19,6 +19,7 @@ export type AttackRecord = {
   payload?: string;
   plant?: string;
   trigger?: string;
+  baseline_probe?: string;
   baseline_response?: string;
   post_attack_response?: string;
   altered?: boolean;

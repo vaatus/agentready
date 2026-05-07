@@ -32,7 +32,8 @@ export function AttackDetailModal({
   const confidencePct = attack.confidence ? Math.round(attack.confidence * 100) : null;
   const isAltered = attack.altered === true;
   const plantText = attack.plant ?? attack.payload ?? "—";
-  const triggerText = attack.trigger ?? "(see payload)";
+  const isTwoTurn = !!(attack.plant && attack.trigger);
+  const probe = attack.baseline_probe;
 
   return (
     <Modal open={open} onClose={onClose} size="xl">
@@ -79,18 +80,36 @@ export function AttackDetailModal({
       </div>
 
       <div className="space-y-5 p-6">
-        <Field label="Attack payload">
-          <Mono large>{plantText}</Mono>
-        </Field>
-
-        {attack.trigger ? (
-          <Field label="Trigger (turn 2)">
-            <Mono>{triggerText}</Mono>
-          </Field>
-        ) : null}
+        {isTwoTurn ? (
+          <>
+            <Field label="Poisoned memory planted in turn 1">
+              <Mono large>{plantText}</Mono>
+            </Field>
+            <Field label="Trigger (sent in turn 2 of both sessions)">
+              <Mono>{attack.trigger ?? "—"}</Mono>
+            </Field>
+          </>
+        ) : (
+          <>
+            {probe ? (
+              <Field label="Baseline control probe (clean session)">
+                <Mono>{probe}</Mono>
+              </Field>
+            ) : null}
+            <Field label={isTwoTurn ? "Attack payload" : "Attack payload (single-turn)"}>
+              <Mono large>{plantText}</Mono>
+            </Field>
+          </>
+        )}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Baseline response (clean session)">
+          <Field
+            label={
+              isTwoTurn
+                ? "Baseline response — same trigger, clean session"
+                : "Baseline response — agent's reply to the control probe"
+            }
+          >
             <div className="rounded-lg border border-emerald-700/40 bg-emerald-950/15 p-3 text-xs leading-relaxed text-emerald-100 whitespace-pre-wrap">
               {attack.baseline_response ?? "—"}
             </div>

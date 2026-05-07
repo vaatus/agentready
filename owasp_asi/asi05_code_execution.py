@@ -137,6 +137,7 @@ async def _run_one(
         altered=verdict.altered,
         confidence=verdict.confidence,
         reasoning=verdict.reasoning,
+        baseline_probe=_BASELINE_PROBE,
     )
 
 

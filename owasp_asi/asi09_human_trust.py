@@ -43,6 +43,7 @@ async def _run_template(
         altered=verdict.altered,
         confidence=verdict.confidence,
         reasoning=verdict.reasoning,
+        baseline_probe=template.phases[-1],
         extra={"transcript": transcript, "danger_threshold": template.danger_threshold},
     )
 

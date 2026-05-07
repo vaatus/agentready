@@ -20,6 +20,19 @@ const CATEGORY_LABELS: Record<string, string> = {
   ASI09: "ASI09 — Crescendo (multi-turn trust)",
 };
 
+type Shape = "two_turn" | "single_turn" | "crescendo";
+
+function classifyShape(failure: AttackRecord): Shape {
+  // ASI06 and ASI06_NOVEL — plant + trigger structure.
+  if (failure.plant && failure.trigger) return "two_turn";
+  // ASI09 — Crescendo (4-phase transcript in extra).
+  if (Array.isArray((failure.extra as { transcript?: string[] } | undefined)?.transcript)) {
+    return "crescendo";
+  }
+  // ASI01/02/05 — single-turn payload, baseline is a control probe.
+  return "single_turn";
+}
+
 export function SessionTranscript({ failure }: { failure: AttackRecord | null | undefined }) {
   const [open, setOpen] = useState(false);
   if (!failure) return null;
@@ -27,8 +40,7 @@ export function SessionTranscript({ failure }: { failure: AttackRecord | null | 
   const category = failure.category ?? "";
   const label = CATEGORY_LABELS[category] ?? category;
   const confidencePct = failure.confidence ? Math.round(failure.confidence * 100) : null;
-  const plantText = failure.plant ?? failure.payload ?? "—";
-  const triggerText = failure.trigger ?? "(see payload)";
+  const shape = classifyShape(failure);
 
   return (
     <>
@@ -43,8 +55,11 @@ export function SessionTranscript({ failure }: { failure: AttackRecord | null | 
             </div>
             <h2 className="mt-2 text-2xl font-bold tracking-tight">{label}</h2>
             <p className="mt-1 max-w-2xl text-sm text-zinc-400">
-              The single highest-confidence successful attack across all live OWASP categories. The
-              Judge LLM (Qwen 2.5 72B AWQ on AMD MI300X) confirmed the manipulation succeeded.
+              {shape === "two_turn"
+                ? "Two-session test. The agent received the poisoned prior memory in turn 1, then the same trigger as the clean baseline in turn 2 — and behaved differently."
+                : shape === "crescendo"
+                  ? "Multi-turn Crescendo. The same dangerous request was refused when asked cold; after a 4-phase escalation that built fake authority, the agent complied."
+                  : "Single-turn indirect injection. We compared the agent's response to this attack payload with its response to a benign control probe in a clean session."}
             </p>
           </div>
           {confidencePct !== null ? (
@@ -56,8 +71,8 @@ export function SessionTranscript({ failure }: { failure: AttackRecord | null | 
                 Judge confidence
                 <InfoTooltip label="Judge confidence">
                   How certain the Judge LLM was that the agent&apos;s post-attack response
-                  materially deviated from baseline in the way the attack intended. 100% = clear
-                  takeover, 50% = uncertain.
+                  materially deviated from the clean baseline in the way the attack intended.
+                  100% = unmistakable takeover; 50% = inconclusive.
                 </InfoTooltip>
               </div>
             </div>
@@ -65,53 +80,9 @@ export function SessionTranscript({ failure }: { failure: AttackRecord | null | 
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-emerald-900/50 bg-black/40 p-4">
-            <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-400">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              clean baseline
-            </div>
-            <div className="space-y-3">
-              <div>
-                <div className="text-[10px] uppercase tracking-wider text-zinc-500">trigger</div>
-                <div className="mt-1 max-h-32 overflow-auto rounded-lg bg-zinc-900/80 p-3 font-mono text-xs leading-relaxed">
-                  {triggerText}
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wider text-zinc-500">
-                  agent response
-                </div>
-                <div className="mt-1 rounded-lg bg-emerald-950/40 p-3 text-xs leading-relaxed text-emerald-100">
-                  {failure.baseline_response ?? "—"}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-red-700/60 bg-black/40 p-4">
-            <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-red-300">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500" />
-              after attack
-            </div>
-            <div className="space-y-3">
-              <div>
-                <div className="text-[10px] uppercase tracking-wider text-zinc-500">
-                  attack payload
-                </div>
-                <div className="mt-1 max-h-44 overflow-auto whitespace-pre-wrap rounded-lg bg-red-950/40 p-3 font-mono text-xs leading-relaxed text-red-200">
-                  {plantText}
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wider text-zinc-500">
-                  agent response — manipulated
-                </div>
-                <div className="mt-1 whitespace-pre-wrap rounded-lg bg-red-900/40 p-3 text-xs leading-relaxed text-red-100">
-                  {failure.post_attack_response ?? "—"}
-                </div>
-              </div>
-            </div>
-          </div>
+          {shape === "two_turn" ? <TwoTurnPanel failure={failure} /> : null}
+          {shape === "single_turn" ? <SingleTurnPanel failure={failure} /> : null}
+          {shape === "crescendo" ? <CrescendoPanel failure={failure} /> : null}
         </div>
 
         <div className="mt-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
@@ -120,8 +91,8 @@ export function SessionTranscript({ failure }: { failure: AttackRecord | null | 
               <span className="text-[10px] uppercase tracking-wider text-zinc-500">
                 Judge said:
               </span>{" "}
-              {failure.reasoning.length > 200
-                ? failure.reasoning.slice(0, 200) + "…"
+              {failure.reasoning.length > 220
+                ? failure.reasoning.slice(0, 220) + "…"
                 : failure.reasoning}
             </div>
           ) : (
@@ -138,5 +109,177 @@ export function SessionTranscript({ failure }: { failure: AttackRecord | null | 
 
       <AttackDetailModal open={open} onClose={() => setOpen(false)} attack={failure} />
     </>
+  );
+}
+
+function TwoTurnPanel({ failure }: { failure: AttackRecord }) {
+  return (
+    <>
+      <Panel kind="clean" title="Clean session (no poison planted)">
+        <Subfield label="user trigger (turn 1)">
+          <Mono>{failure.trigger ?? "—"}</Mono>
+        </Subfield>
+        <Subfield label="agent response">
+          <BoxedResponse kind="clean">{failure.baseline_response ?? "—"}</BoxedResponse>
+        </Subfield>
+      </Panel>
+      <Panel kind="attack" title="After memory plant">
+        <Subfield label="poisoned memory planted in turn 1">
+          <Mono kind="attack" maxHeight="max-h-44">
+            {failure.plant ?? "—"}
+          </Mono>
+        </Subfield>
+        <Subfield label="same user trigger (turn 2)">
+          <Mono>{failure.trigger ?? "—"}</Mono>
+        </Subfield>
+        <Subfield label="manipulated response">
+          <BoxedResponse kind="attack">{failure.post_attack_response ?? "—"}</BoxedResponse>
+        </Subfield>
+      </Panel>
+    </>
+  );
+}
+
+function SingleTurnPanel({ failure }: { failure: AttackRecord }) {
+  const probe = failure.baseline_probe ?? "(benign control probe)";
+  return (
+    <>
+      <Panel kind="clean" title="Clean baseline (benign control probe)">
+        <Subfield label="we asked the agent">
+          <Mono>{probe}</Mono>
+        </Subfield>
+        <Subfield label="agent response">
+          <BoxedResponse kind="clean">{failure.baseline_response ?? "—"}</BoxedResponse>
+        </Subfield>
+      </Panel>
+      <Panel kind="attack" title="Attack payload">
+        <Subfield label="attacker-controlled message (single turn)">
+          <Mono kind="attack" maxHeight="max-h-56">
+            {failure.payload ?? "—"}
+          </Mono>
+        </Subfield>
+        <Subfield label="manipulated response">
+          <BoxedResponse kind="attack">{failure.post_attack_response ?? "—"}</BoxedResponse>
+        </Subfield>
+      </Panel>
+    </>
+  );
+}
+
+function CrescendoPanel({ failure }: { failure: AttackRecord }) {
+  const transcript =
+    (failure.extra as { transcript?: string[] } | undefined)?.transcript ?? [];
+  const cold = failure.baseline_probe ?? "(the dangerous ask, alone)";
+  return (
+    <>
+      <Panel kind="clean" title="Cold control (single-turn dangerous ask)">
+        <Subfield label="we asked the agent (one turn, no priming)">
+          <Mono>{cold}</Mono>
+        </Subfield>
+        <Subfield label="agent response">
+          <BoxedResponse kind="clean">{failure.baseline_response ?? "—"}</BoxedResponse>
+        </Subfield>
+      </Panel>
+      <Panel kind="attack" title="Crescendo (4-phase escalation)">
+        <Subfield label="full 4-turn transcript">
+          <div className="max-h-72 space-y-1.5 overflow-auto">
+            {transcript.length > 0 ? (
+              transcript.map((turn, i) => (
+                <div
+                  key={i}
+                  className="rounded-md border border-zinc-800 bg-black/40 p-2 font-mono text-[11px] leading-relaxed text-zinc-300 whitespace-pre-wrap"
+                >
+                  {turn}
+                </div>
+              ))
+            ) : (
+              <Mono kind="attack">{failure.payload ?? "—"}</Mono>
+            )}
+          </div>
+        </Subfield>
+        <Subfield label="final-turn response (after escalation)">
+          <BoxedResponse kind="attack">{failure.post_attack_response ?? "—"}</BoxedResponse>
+        </Subfield>
+      </Panel>
+    </>
+  );
+}
+
+function Panel({
+  kind,
+  title,
+  children,
+}: {
+  kind: "clean" | "attack";
+  title: string;
+  children: React.ReactNode;
+}) {
+  const wrap =
+    kind === "clean"
+      ? "border-emerald-900/50"
+      : "border-red-700/60";
+  const dot = kind === "clean" ? "bg-emerald-500" : "bg-red-500";
+  const headColor = kind === "clean" ? "text-emerald-400" : "text-red-300";
+  return (
+    <div className={`rounded-xl border ${wrap} bg-black/40 p-4`}>
+      <div
+        className={`mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.15em] ${headColor}`}
+      >
+        <span className={`inline-block h-1.5 w-1.5 rounded-full ${dot}`} />
+        {title}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </div>
+  );
+}
+
+function Subfield({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</div>
+      <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function Mono({
+  children,
+  kind,
+  maxHeight,
+}: {
+  children: React.ReactNode;
+  kind?: "attack";
+  maxHeight?: string;
+}) {
+  return (
+    <div
+      className={`overflow-auto rounded-lg p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap ${
+        kind === "attack"
+          ? "bg-red-950/40 text-red-200"
+          : "bg-zinc-900/80 text-zinc-300"
+      } ${maxHeight ?? "max-h-32"}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function BoxedResponse({
+  children,
+  kind,
+}: {
+  children: React.ReactNode;
+  kind: "clean" | "attack";
+}) {
+  return (
+    <div
+      className={`rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap ${
+        kind === "clean"
+          ? "bg-emerald-950/40 text-emerald-100"
+          : "bg-red-900/40 text-red-100"
+      }`}
+    >
+      {children}
+    </div>
   );
 }

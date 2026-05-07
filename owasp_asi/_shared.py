@@ -16,6 +16,7 @@ class AttackOutcome:
     altered: bool
     confidence: float
     reasoning: str
+    baseline_probe: str = ""
     extra: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
