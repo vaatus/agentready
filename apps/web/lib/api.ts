@@ -1,4 +1,7 @@
-const API_URL = process.env.AGENTREADY_API_URL ?? "http://localhost:8000";
+// Server components fetch the backend directly. Client components fetch
+// `/api/*` and Next rewrites to the backend (no CORS, no env exposure).
+const SERVER_API_URL = process.env.AGENTREADY_API_URL ?? "http://localhost:8000";
+const API_URL = typeof window === "undefined" ? SERVER_API_URL : "/api";
 
 export type LeaderboardEntry = {
   slug: string;
@@ -9,12 +12,29 @@ export type LeaderboardEntry = {
   last_scored_at: string | null;
 };
 
+export type AttackRecord = {
+  category?: string;
+  name?: string;
+  seed_name?: string;
+  payload?: string;
+  plant?: string;
+  trigger?: string;
+  baseline_response?: string;
+  post_attack_response?: string;
+  altered?: boolean;
+  confidence?: number;
+  reasoning?: string;
+  extra?: Record<string, unknown>;
+};
+
 export type AsiScore = {
   category: string;
   score: number;
   is_real: boolean;
   failed_attacks_count: number;
   passed_attacks_count: number;
+  failed_attacks?: AttackRecord[];
+  passed_attacks?: AttackRecord[];
 };
 
 export type ChaosCell = {

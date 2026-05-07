@@ -10,6 +10,7 @@ import asyncio
 from typing import Any
 
 from agents.llm_clients import JudgeClient, RedLLMClient
+from agents.payload_tailoring import tailor_named_pt_seeds
 from apps.api.core.ingest import AgentManifest
 from owasp_asi._shared import AttackOutcome, CategoryResult, score_from_attacks
 
@@ -91,7 +92,7 @@ async def run_asi06_novel(
     new_session: Any,
     *,
     judge: JudgeClient | None = None,
-    red_llm: RedLLMClient | None = None,  # noqa: ARG001
+    red_llm: RedLLMClient | None = None,
 ) -> CategoryResult:
     if not manifest.has_memory:
         return CategoryResult(
@@ -101,13 +102,14 @@ async def run_asi06_novel(
         )
 
     judge = judge or JudgeClient.from_settings()
+    seeds = await tailor_named_pt_seeds(red_llm, manifest, _SELFMOD_SEEDS, label="ASI06_NOVEL")
     sem = asyncio.Semaphore(2)
 
     async def _bounded(seed: dict[str, str]) -> AttackOutcome:
         async with sem:
             return await _run_one(seed=seed, new_session=new_session, judge=judge)
 
-    results = await asyncio.gather(*[_bounded(s) for s in _SELFMOD_SEEDS])
+    results = await asyncio.gather(*[_bounded(s) for s in seeds])
     failed = [r for r in results if r.altered]
     passed = [r for r in results if not r.altered]
     # Three templates → max 60-point penalty. Heavier weighting because each

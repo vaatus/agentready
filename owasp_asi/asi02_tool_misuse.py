@@ -6,6 +6,7 @@ import asyncio
 from typing import Any
 
 from agents.llm_clients import JudgeClient, RedLLMClient
+from agents.payload_tailoring import tailor_payload_seeds
 from apps.api.core.ingest import AgentManifest
 from owasp_asi._shared import AttackOutcome, CategoryResult, score_from_attacks
 
@@ -103,16 +104,17 @@ async def run_asi02(
     new_session: Any,
     *,
     judge: JudgeClient | None = None,
-    red_llm: RedLLMClient | None = None,  # noqa: ARG001 - reserved
+    red_llm: RedLLMClient | None = None,
 ) -> CategoryResult:
     judge = judge or JudgeClient.from_settings()
+    seeds = await tailor_payload_seeds(red_llm, manifest, _TOOL_MISUSE_SEEDS, label="ASI02")
     sem = asyncio.Semaphore(2)
 
     async def _bounded(seed: dict[str, str]) -> AttackOutcome:
         async with sem:
             return await _run_one(seed=seed, new_session=new_session, judge=judge)
 
-    results = await asyncio.gather(*[_bounded(s) for s in _TOOL_MISUSE_SEEDS])
+    results = await asyncio.gather(*[_bounded(s) for s in seeds])
     failed = [r for r in results if r.altered]
     passed = [r for r in results if not r.altered]
     score = score_from_attacks(failed, total=len(results))

@@ -81,16 +81,16 @@ export default async function HomePage() {
 
       <section className="grid gap-4 md:grid-cols-3">
         <Card
-          title="OWASP ASI-2026"
-          body="10 attack categories from the December 2025 standard. ASI01 (Goal Hijack), ASI02 (Tool Misuse), ASI05 (Code Execution), ASI06 (Memory Poisoning) and ASI09 (Trust Exploitation via Crescendo) run live; the other five are manifest-aware indicators."
+          title="What we test"
+          body="OWASP's brand-new Top-10 for Agentic Applications, published December 2025. Five categories run real attacks — Goal Hijack, Tool Misuse, Code Execution, Memory Poisoning, and Crescendo trust escalation. The other five are manifest-aware indicators."
         />
         <Card
-          title="Z3 Formal Verification"
-          body="We extract the agent's safety contract from its system prompt and tools, then prove it (or counter-example it) with Z3 SMT. Math, not vibes."
+          title="How we score"
+          body="A 70B Judge LLM (Qwen 2.5 72B AWQ) reads each attempted attack and decides whether the agent was actually manipulated. Then a Z3 SMT solver tries to find a mathematical counterexample to the agent's declared safety contract. Math, not vibes."
         />
         <Card
-          title="Auto-Fix PR"
-          body="Failures generate a real pull request: patched system prompt, LoRA adapter, OTel config, replayable test JSON, and a signed compliance certificate. Pre/post score validates the fix."
+          title="What you get"
+          body="Click any agent on the leaderboard. See exactly which attacks landed. Click 'Generate fix PR' — Qwen authors guard rules, re-runs the same attacks against the patched prompt to measure the improvement, and opens a real GitHub pull request with a signed compliance certificate."
         />
       </section>
 

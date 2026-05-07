@@ -56,6 +56,8 @@ async def get_agent(slug: str, session: AsyncSession = Depends(get_session)) -> 
                     "is_real": row.is_real,
                     "failed_attacks_count": len(row.failed_attacks or []),
                     "passed_attacks_count": len(row.passed_attacks or []),
+                    "failed_attacks": row.failed_attacks or [],
+                    "passed_attacks": row.passed_attacks or [],
                 }
             )
             if row.worst_failure:

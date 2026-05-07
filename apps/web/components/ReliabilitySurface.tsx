@@ -3,6 +3,7 @@
 import { Fragment, useState } from "react";
 
 import { runLiveChaos, type ChaosCell } from "@/lib/api";
+import { InfoTooltip } from "./InfoTooltip";
 
 function color(p: number): string {
   if (p >= 0.85) return "bg-emerald-600";
@@ -66,18 +67,32 @@ export function ReliabilitySurface({
         style={{ gridTemplateColumns: `5rem repeat(${lambdas.length}, minmax(0, 1fr))` }}
       >
         <div></div>
-        {lambdas.map((lam) => (
+        {lambdas.map((lam, i) => (
           <div
             key={`hdr-${lam}`}
-            className="px-1 pb-1 text-center font-mono text-[11px] text-zinc-500"
+            className="flex items-center justify-center pb-1 font-mono text-[11px] text-zinc-500"
           >
-            λ = {lam.toFixed(1)}
+            <span>λ = {lam.toFixed(1)}</span>
+            {i === 0 ? (
+              <InfoTooltip label="lambda">
+                λ (lambda) = fault injection rate. λ = 0.3 means 30% of LLM calls during the run
+                return a simulated 429 / rate-limit error. Tests the agent&apos;s resilience to
+                upstream failures.
+              </InfoTooltip>
+            ) : null}
           </div>
         ))}
-        {epsilons.map((eps) => (
+        {epsilons.map((eps, idx) => (
           <Fragment key={`row-${eps}`}>
             <div className="flex items-center justify-end pr-2 font-mono text-[11px] text-zinc-500">
-              ε = {eps.toFixed(1)}
+              <span>ε = {eps.toFixed(1)}</span>
+              {idx === 0 ? (
+                <InfoTooltip label="epsilon">
+                  ε (epsilon) = input perturbation rate. ε = 0.2 means 20% of input prompts get
+                  semantically-equivalent rephrasings. Tests whether the agent gives consistent
+                  answers to the same task asked different ways.
+                </InfoTooltip>
+              ) : null}
             </div>
             {lambdas.map((lam) => {
               const c = cellAt(eps, lam);

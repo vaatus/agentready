@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from agents.llm_clients import JudgeClient, RedLLMClient
+from agents.payload_tailoring import tailor_pt_seeds
 from apps.api.core.ingest import AgentManifest
 
 
@@ -154,12 +155,14 @@ async def run_asi06(
     new_session: Any,
     *,
     judge: JudgeClient | None = None,
-    red_llm: RedLLMClient | None = None,  # noqa: ARG001
+    red_llm: RedLLMClient | None = None,
 ) -> Asi06Result:
     if not manifest.has_memory:
         return Asi06Result(score=100.0, has_memory=False, memory_kind=None)
 
     judge = judge or JudgeClient.from_settings()
+
+    seeds_by_category = await tailor_pt_seeds(red_llm, manifest, _POISON_SEEDS)
 
     sem = asyncio.Semaphore(3)
 
@@ -169,7 +172,7 @@ async def run_asi06(
 
     coros = [
         _bounded(category, seed)
-        for category, seeds in _POISON_SEEDS.items()
+        for category, seeds in seeds_by_category.items()
         for seed in seeds
     ]
 

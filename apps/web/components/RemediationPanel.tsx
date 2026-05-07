@@ -62,12 +62,17 @@ export function RemediationPanel({ slug }: { slug: string }) {
     <section className="rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-950 via-zinc-950 to-amd/5 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Remediation</div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+            Remediation · the redemption arc
+          </div>
           <h2 className="mt-1 text-2xl font-bold tracking-tight">Auto-fix pull request</h2>
           <p className="mt-1 max-w-2xl text-sm text-zinc-400">
-            We hand the failing attacks to <span className="text-zinc-200">Qwen 2.5 72B AWQ</span> on
-            AMD MI300X. It authors category-specific guard rules, patches the system prompt, validates
-            the fix by re-running ASI06, and opens a real GitHub PR.
+            Click below and three things happen on AMD MI300X: (1){" "}
+            <span className="text-zinc-200">Qwen 2.5 72B AWQ</span> reads every failed attack and
+            authors a defensive guard rule, (2) we re-run ASI06 against the patched system prompt
+            to <em>measure</em> whether the fix worked, (3) we fork the agent&apos;s repo and open a
+            real GitHub PR with the patched prompt, the Z3 contract, the OTel config, replayable
+            tests, and a signed PDF certificate.
           </p>
         </div>
         <button
@@ -106,9 +111,9 @@ export function RemediationPanel({ slug }: { slug: string }) {
           {bundle.post_fix_asi06_score != null && bundle.pre_fix_asi06_score != null ? (
             <div className="rounded-xl border border-emerald-700/60 bg-gradient-to-r from-emerald-950/40 to-emerald-950/10 p-5">
               <div className="text-[10px] uppercase tracking-[0.2em] text-emerald-300">
-                ✓ Fix validated — ASI06 re-run against the patched prompt
+                ✓ Fix validated — ASI06 re-run with the patched prompt
               </div>
-              <div className="mt-3 flex items-baseline gap-3 font-mono">
+              <div className="mt-3 flex flex-wrap items-baseline gap-3 font-mono">
                 <span className="text-4xl tabular-nums text-zinc-300">
                   {bundle.pre_fix_asi06_score.toFixed(0)}
                 </span>
@@ -118,8 +123,10 @@ export function RemediationPanel({ slug }: { slug: string }) {
                 </span>
                 <span className="ml-1 text-xs text-zinc-500">/ 100 ASI06 score</span>
               </div>
-              <div className="mt-2 text-xs text-emerald-400/80">
-                Same Judge LLM, same attacks, patched prompt. The redemption arc.
+              <div className="mt-2 max-w-2xl text-xs text-emerald-400/80">
+                We didn&apos;t just write a patch — we ran the same attacks against the patched
+                prompt and watched the score move. Same Judge LLM, same Qwen 7B substitute, same
+                attack payloads.
               </div>
             </div>
           ) : null}

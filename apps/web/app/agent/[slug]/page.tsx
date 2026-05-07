@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ASIScorecard } from "@/components/ASIScorecard";
+import { InfoTooltip } from "@/components/InfoTooltip";
 import { ReliabilitySurface } from "@/components/ReliabilitySurface";
 import { RemediationPanel } from "@/components/RemediationPanel";
 import { SessionTranscript } from "@/components/SessionTranscript";
-import { fetchAgent } from "@/lib/api";
+import { fetchAgent, type AttackRecord } from "@/lib/api";
 
 export const revalidate = 60;
 
@@ -93,36 +94,57 @@ export default async function AgentPage({ params }: { params: { slug: string } }
         </div>
 
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
-          <div className="text-[10px] uppercase tracking-[0.15em] text-zinc-500">
+          <div className="flex items-center text-[10px] uppercase tracking-[0.15em] text-zinc-500">
             Z3 verification
+            <InfoTooltip label="Z3 verification">
+              Math, not vibes. Z3 SMT solver tries to find an input that violates the agent&apos;s
+              declared safety contract. <span className="text-emerald-300">VERIFIED</span> = the
+              math says it&apos;s safe. <span className="text-red-300">VIOLATION</span> = a
+              concrete counterexample exists.
+            </InfoTooltip>
           </div>
           <div className={`mt-1 font-mono text-2xl ${z3Color(z3)}`}>{z3 ?? "—"}</div>
           <div className="mt-2 text-xs text-zinc-500">
-            Hand-written contracts + Qwen-authored auto-formalization.
+            4 hand-written templates + 1 Qwen-authored auto-contract.
           </div>
         </div>
 
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
-          <div className="text-[10px] uppercase tracking-[0.15em] text-zinc-500">
+          <div className="flex items-center text-[10px] uppercase tracking-[0.15em] text-zinc-500">
             Chaos resilience
+            <InfoTooltip label="Chaos grade">
+              Grade A-F derived from the worst pass@1 cell across the Reliability Surface. A means
+              the agent shrugs off perturbation and rate-limits; F means it falls over. Like a
+              Netflix Chaos Monkey grade for AI agents.
+            </InfoTooltip>
           </div>
           <div className={`mt-1 font-mono text-5xl tabular-nums ${gradeColor(chaosGrade)}`}>
             {chaosGrade ?? "—"}
           </div>
           <div className="mt-2 text-xs text-zinc-500">
-            R(k=1, ε, λ) — pass@1 under perturbation + fault injection.
+            How the agent holds up under input perturbation + simulated rate-limits.
           </div>
         </div>
       </section>
 
       <section>
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="text-xl font-semibold">OWASP ASI-2026 breakdown</h2>
-          <div className="text-xs text-zinc-500">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">OWASP ASI-2026 breakdown</h2>
+            <p className="text-xs text-zinc-400">
+              Click any card to see what the category tests, the workflow that produced this score,
+              and every attack that was tried against this agent.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-zinc-500">
             <span className="rounded bg-amd/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-amd">
               live
             </span>
-            <span className="ml-2">= attacks executed against the substitute on MI300X</span>
+            <span>= real attacks ran on MI300X · </span>
+            <span className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-zinc-400">
+              indicator
+            </span>
+            <span>= manifest-derived heuristic</span>
           </div>
         </div>
         <ASIScorecard scores={agent.asi_scores} />
@@ -130,11 +152,19 @@ export default async function AgentPage({ params }: { params: { slug: string } }
 
       {(agent.chaos_cells ?? []).length > 0 ? (
         <section>
-          <h2 className="mb-1 text-xl font-semibold">Reliability Surface R(k=1, ε, λ)</h2>
+          <div className="mb-1 flex items-center">
+            <h2 className="text-xl font-semibold">Reliability Surface</h2>
+            <InfoTooltip label="Reliability Surface">
+              From ReliabilityBench (arXiv 2601.06112). 3×3 grid measuring pass@1 — the rate at
+              which the agent succeeds on a benign task — across two stresses: input perturbation
+              (ε) and fault injection (λ). Each cell is a real measurement with n trials.
+            </InfoTooltip>
+          </div>
           <p className="mb-4 max-w-2xl text-sm text-zinc-400">
-            How pass@1 degrades under input perturbation rate ε and fault injection rate λ.
-            Chaos engineering for AI agents — same methodology as Netflix Chaos Monkey, applied to
-            LLM-driven workflows.
+            Read it like a heat map: the top-left cell is &ldquo;happy path&rdquo; (no chaos);
+            bottom-right is the agent under maximum stress. Hover the ε / λ headers for definitions.
+            Click <span className="font-mono text-amd">Run live chaos</span> to actually run the
+            rate-limit fault on this agent right now.
           </p>
           <ReliabilitySurface slug={agent.slug} cells={agent.chaos_cells} />
         </section>
@@ -142,9 +172,7 @@ export default async function AgentPage({ params }: { params: { slug: string } }
 
       <RemediationPanel slug={agent.slug} />
 
-      <SessionTranscript
-        failure={agent.worst_failure as Parameters<typeof SessionTranscript>[0]["failure"]}
-      />
+      <SessionTranscript failure={agent.worst_failure as AttackRecord | null | undefined} />
     </div>
   );
 }

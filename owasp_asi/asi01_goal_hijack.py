@@ -6,6 +6,7 @@ import asyncio
 from typing import Any
 
 from agents.llm_clients import JudgeClient, RedLLMClient
+from agents.payload_tailoring import tailor_payload_seeds
 from apps.api.core.ingest import AgentManifest
 from owasp_asi._shared import AttackOutcome, CategoryResult, score_from_attacks
 
@@ -106,13 +107,11 @@ async def run_asi01(
     new_session: Any,
     *,
     judge: JudgeClient | None = None,
-    red_llm: RedLLMClient | None = None,  # noqa: ARG001 - payload tailoring is a v2 enhancement
-    extra_seeds: int = 0,
+    red_llm: RedLLMClient | None = None,
 ) -> CategoryResult:
     judge = judge or JudgeClient.from_settings()
 
-    seeds = list(_HIJACK_SEEDS)
-    # Note: extra_seeds is reserved for Red-LLM-generated tailored payloads.
+    seeds = await tailor_payload_seeds(red_llm, manifest, _HIJACK_SEEDS, label="ASI01")
 
     sem = asyncio.Semaphore(2)
 
