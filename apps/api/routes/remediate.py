@@ -36,15 +36,40 @@ class _CachedZ3Report:
     contracts: list
 
 
-def _hydrate_failed_attacks(asi06_row: AsiScore | None) -> list[AttackResult]:
-    if asi06_row is None or not asi06_row.failed_attacks:
-        return []
+def _hydrate_failed_attacks(score_rows: list[AsiScore]) -> list[AttackResult]:
+    """Hydrate failed attacks from every live ASI score row.
+
+    The DB stores attacks polymorphically — ASI06 has plant/trigger/baseline_response
+    fields, ASI01/02/09 have payload instead. We adapt both into AttackResult so
+    the remediation pipeline can build guard rules from any failed attack.
+    """
     out: list[AttackResult] = []
-    for f in asi06_row.failed_attacks:
-        try:
-            out.append(AttackResult(**f))
-        except TypeError:
+    for row in score_rows:
+        if not row.failed_attacks or not row.is_real:
             continue
+        for f in row.failed_attacks:
+            try:
+                out.append(AttackResult(**f))
+                continue
+            except TypeError:
+                pass
+            # ASI01/02/09 shape — payload instead of plant.
+            try:
+                out.append(
+                    AttackResult(
+                        category=f.get("category", row.category),
+                        seed_name=f.get("name", "?"),
+                        plant=f.get("payload", f.get("plant", ""))[:600],
+                        trigger=f.get("trigger", "(see payload)"),
+                        baseline_response=f.get("baseline_response", ""),
+                        post_attack_response=f.get("post_attack_response", ""),
+                        altered=bool(f.get("altered", False)),
+                        confidence=float(f.get("confidence", 0.0)),
+                        reasoning=str(f.get("reasoning", "")),
+                    )
+                )
+            except (TypeError, KeyError, ValueError):
+                continue
     return out
 
 
@@ -86,14 +111,12 @@ async def trigger_remediate(slug: str, session: AsyncSession = Depends(get_sessi
     if latest_run is None:
         raise HTTPException(status_code=400, detail="No scan run for this agent yet")
 
-    asi06_row = (
+    score_rows = (
         await session.execute(
-            select(AsiScore).where(
-                (AsiScore.scan_run_id == latest_run.id) & (AsiScore.category == "ASI06")
-            )
+            select(AsiScore).where(AsiScore.scan_run_id == latest_run.id)
         )
-    ).scalar_one_or_none()
-    failed_attacks = _hydrate_failed_attacks(asi06_row)
+    ).scalars().all()
+    failed_attacks = _hydrate_failed_attacks(list(score_rows))
 
     z3_rows = (
         await session.execute(select(Z3Result).where(Z3Result.scan_run_id == latest_run.id))
