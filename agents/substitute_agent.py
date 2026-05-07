@@ -69,8 +69,12 @@ class SubstituteSession:
                 # while the separate Judge LLM sees the transcript and scores it.
                 self._llm = _BaseLLMClient(s.red_llm_url, s.red_llm_model, s.red_llm_api_key)
 
+    system_prompt_override: str | None = None
+
     @property
     def _system_prompt(self) -> str:
+        if self.system_prompt_override is not None:
+            return self.system_prompt_override
         return self.manifest.system_prompt or _DEFAULT_SUBSTITUTE_PROMPT
 
     def _full_chat(self, user_message: str) -> list[dict[str, str]]:
@@ -126,8 +130,15 @@ _DEFAULT_SUBSTITUTE_PROMPT = (
 )
 
 
-def make_session_factory(manifest: AgentManifest) -> Any:
-    """Returns a zero-arg callable producing fresh SubstituteSession instances."""
+def make_session_factory(manifest: AgentManifest, *, system_prompt_override: str | None = None) -> Any:
+    """Returns a zero-arg callable producing fresh SubstituteSession instances.
+
+    `system_prompt_override` lets the post-fix validation pass use the
+    Qwen-authored patched prompt instead of the target's original.
+    """
     def factory() -> SubstituteSession:
-        return SubstituteSession(manifest)
+        s = SubstituteSession(manifest)
+        if system_prompt_override is not None:
+            s.system_prompt_override = system_prompt_override
+        return s
     return factory

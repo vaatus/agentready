@@ -61,6 +61,9 @@ export type RemediationBundle = {
   pr_body: string;
   diff_preview: string;
   asi_categories_addressed: string[];
+  patched_system_prompt?: string;
+  pre_fix_asi06_score?: number | null;
+  post_fix_asi06_score?: number | null;
   pr_url: string | null;
   artifact_url_prefix: string;
 };

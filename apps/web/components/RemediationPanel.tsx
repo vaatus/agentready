@@ -93,6 +93,18 @@ export function RemediationPanel({ slug }: { slug: string }) {
 
       {bundle && phase === "ready" ? (
         <div className="mt-6 space-y-4">
+          {bundle.post_fix_asi06_score != null && bundle.pre_fix_asi06_score != null ? (
+            <div className="rounded-xl border border-emerald-700/60 bg-emerald-950/30 p-4">
+              <div className="text-xs uppercase tracking-wider text-emerald-300">Validated fix — ASI06 re-run against the patched prompt</div>
+              <div className="mt-2 flex items-baseline gap-3 font-mono">
+                <span className="text-3xl text-zinc-300">{bundle.pre_fix_asi06_score.toFixed(0)}</span>
+                <span className="text-zinc-600">→</span>
+                <span className="text-3xl text-emerald-300">{bundle.post_fix_asi06_score.toFixed(0)}</span>
+                <span className="text-xs text-zinc-500">/ 100 ASI06 score</span>
+              </div>
+            </div>
+          ) : null}
+
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-xl border border-zinc-800 bg-black/40 p-4">
               <div className="text-xs uppercase tracking-wider text-zinc-500">PR title</div>

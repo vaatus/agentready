@@ -44,6 +44,9 @@ class RemediationBundle:
     pr_body: str
     diff_preview: str  # markdown diff of system prompt
     asi_categories_addressed: list[str]
+    patched_system_prompt: str = ""
+    pre_fix_asi06_score: float | None = None
+    post_fix_asi06_score: float | None = None
     pr_url: str | None = None  # populated when actually pushed
 
     def to_dict(self) -> dict[str, Any]:
@@ -56,6 +59,9 @@ class RemediationBundle:
             "pr_body": self.pr_body,
             "diff_preview": self.diff_preview,
             "asi_categories_addressed": self.asi_categories_addressed,
+            "patched_system_prompt": self.patched_system_prompt,
+            "pre_fix_asi06_score": self.pre_fix_asi06_score,
+            "post_fix_asi06_score": self.post_fix_asi06_score,
             "pr_url": self.pr_url,
         }
 
@@ -462,7 +468,28 @@ async def remediate(
         pr_body=pr_body,
         diff_preview=diff_preview,
         asi_categories_addressed=sorted({a.category for a in failed_attacks}),
+        patched_system_prompt=patched_prompt,
+        pre_fix_asi06_score=pre_score,
     )
+
+    # ---- Validate the fix: re-run ASI06 against the patched prompt ----
+    # This is the "redemption arc" measurement — does the patched system
+    # prompt actually defend against the same poison-memory attacks?
+    if failed_attacks:
+        try:
+            from agents.substitute_agent import make_session_factory
+            from owasp_asi.asi06_memory_poisoning import run_asi06
+
+            patched_factory = make_session_factory(manifest, system_prompt_override=patched_prompt)
+            post_fix = await run_asi06(manifest, patched_factory, judge=judge)
+            bundle.post_fix_asi06_score = post_fix.score
+            logger.info(
+                "post-fix ASI06: %.1f (was %s)",
+                post_fix.score,
+                "n/a" if pre_score is None else f"{pre_score:.1f}",
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("post-fix validation failed")
 
     # If GitHub auth is available, open a real PR against a fork in our namespace.
     if detect_auth() is not None:
