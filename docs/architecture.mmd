@@ -1,0 +1,74 @@
+%% AgentReady architecture — render via:
+%%   mmdc -i docs/architecture.mmd -o docs/screenshots/architecture.png -t dark -b transparent -w 1920
+%% or paste into mermaid.live
+flowchart TB
+    classDef red fill:#ED1C24,stroke:#A50E14,color:#fff
+    classDef gpu fill:#1f2937,stroke:#ED1C24,color:#fff
+    classDef stage fill:#0f172a,stroke:#475569,color:#e2e8f0
+    classDef out fill:#064e3b,stroke:#10b981,color:#fff
+
+    Input["Input: GitHub URL or pre-scored leaderboard click"] --> Ingest
+
+    subgraph Ingest["Ingest layer"]
+        Clone["Clone repo (depth=1)"]
+        Detect["Detect framework<br/>(LangChain / LangGraph /<br/>CrewAI / AutoGen / custom)"]
+        Extract["Extract<br/>system prompt + tools + memory"]
+    end
+
+    Ingest --> Orchestrator
+
+    subgraph Orchestrator["Evaluation orchestrator (AMD MI300X · 192 GB VRAM)"]
+        direction LR
+
+        subgraph Live["5 Live ASI categories"]
+            ASI01["ASI01<br/>Goal Hijack<br/>5 single-turn"]
+            ASI02["ASI02<br/>Tool Misuse<br/>5 dangerous chains"]
+            ASI05["ASI05<br/>Code Execution<br/>5 RCE/sandbox probes"]
+            ASI06["ASI06<br/>Memory Poisoning<br/>+ Self-modifying (novel)"]
+            ASI09["ASI09<br/>Crescendo<br/>4-phase multi-turn"]
+        end
+
+        subgraph Indicators["6 Indicators<br/>(manifest-aware)"]
+            ASI03["ASI03<br/>Identity"]
+            ASI04["ASI04<br/>Supply chain"]
+            ASI07["ASI07<br/>Planning"]
+            ASI08["ASI08<br/>Inter-agent"]
+            ASI10["ASI10<br/>Rogue"]
+        end
+
+        Z3["Z3 SMT<br/>4 contract templates<br/>VERIFIED / VIOLATION"]:::stage
+        Chaos["Reliability surface<br/>R(k=1, ε, λ)<br/>+ live fault injector"]:::stage
+
+        Judge["Judge LLM<br/>Qwen 2.5 72B AWQ<br/>~40 GB VRAM"]:::gpu
+        Red["Red LLM + substitute<br/>Qwen 2.5 7B Instruct<br/>~16 GB VRAM"]:::gpu
+
+        Judge -.scores.-> ASI01 & ASI02 & ASI05 & ASI06 & ASI09
+        Red -.attacks + impersonates target.-> ASI01 & ASI02 & ASI05 & ASI06 & ASI09
+    end
+
+    Orchestrator --> Score
+
+    subgraph Score["Scorer + public leaderboard"]
+        Combine["Aggregate ASI + Z3 ± + chaos ±"]
+        Rank["Rank 13 famous agents publicly"]
+    end
+
+    Score --> Remediate
+
+    subgraph Remediate["Remediation (the redemption arc)"]
+        Author["Qwen 72B authors guard rules"]
+        Patch["Patched system prompt"]
+        LoRA["Chaos-remediation LoRA<br/>(Qwen 7B + adapter, on HF)"]:::red
+        Cert["Signed PDF certificate"]
+        PR["Real GitHub PR<br/>(fork in our namespace)"]
+        Validate["Re-run ASI06 against patched prompt<br/>→ pre/post score"]
+    end
+
+    Remediate --> Output
+
+    subgraph Output["Output"]
+        Site["Public leaderboard at agentready.dev"]:::out
+        Badge["Embed badge<br/>(Codecov-style SVG)"]:::out
+        X402["x402 paid tier<br/>(USDC on Base)"]:::out
+        HF["HuggingFace artifacts<br/>(Judge Space + LoRA)"]:::out
+    end

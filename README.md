@@ -8,6 +8,8 @@ AMD Developer Hackathon submission · [lablab.ai](https://lablab.ai/ai-hackathon
 
 ![Leaderboard hero](docs/screenshots/cover.png)
 
+![Architecture](docs/screenshots/architecture.png)
+
 ---
 
 ## Live artifacts
