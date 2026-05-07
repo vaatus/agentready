@@ -20,6 +20,7 @@ from apps.api.core.ingest import AgentManifest, ingest
 from chaos.reliability_surface import ReliabilitySurface, deterministic_surface
 from owasp_asi._shared import CategoryResult
 from owasp_asi.asi01_goal_hijack import run_asi01
+from owasp_asi.asi02_tool_misuse import run_asi02
 from owasp_asi.asi06_memory_poisoning import Asi06Result, run_asi06
 from owasp_asi.asi09_human_trust import run_asi09
 from owasp_asi.stub_scores import StubScore, stub_scores_for
@@ -112,16 +113,18 @@ async def run_scan(
         session_factory = make_session_factory(manifest)
         asi06 = await run_asi06(manifest, session_factory, judge=judge, red_llm=red_llm)
         asi01 = await run_asi01(manifest, session_factory, judge=judge, red_llm=red_llm)
+        asi02 = await run_asi02(manifest, session_factory, judge=judge, red_llm=red_llm)
         asi09 = await run_asi09(manifest, session_factory, judge=judge)
         result.asi06_detail = asi06
-        result.live_results = {"ASI01": asi01, "ASI09": asi09}
+        result.live_results = {"ASI01": asi01, "ASI02": asi02, "ASI09": asi09}
 
-        # ---- Step 3: stub the remaining 7 categories ----
-        live_categories = {"ASI01", "ASI06", "ASI09"}
+        # ---- Step 3: stub the remaining 6 categories ----
+        live_categories = {"ASI01", "ASI02", "ASI06", "ASI09"}
         stubs: list[StubScore] = [s for s in stub_scores_for(manifest) if s.category not in live_categories]
 
         live_scores: list[CategoryScore] = [
             CategoryScore(category="ASI01", score=asi01.score, is_real=True, details=asi01.to_dict()),
+            CategoryScore(category="ASI02", score=asi02.score, is_real=True, details=asi02.to_dict()),
             CategoryScore(category="ASI06", score=asi06.score, is_real=True, details=asi06.to_dict()),
             CategoryScore(category="ASI09", score=asi09.score, is_real=True, details=asi09.to_dict()),
         ]
