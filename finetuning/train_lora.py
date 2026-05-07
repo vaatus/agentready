@@ -87,7 +87,6 @@ def main(*, data_path: Path, out_path: Path, base_model: str, epochs: int, lora_
         save_strategy="epoch",
         save_total_limit=1,
         report_to="none",
-        max_seq_length=1024,
         packing=False,
     )
 
