@@ -20,7 +20,17 @@ AMD Developer Hackathon submission · [lablab.ai](https://lablab.ai/ai-hackathon
 | Judge LLM Space (HF) | https://huggingface.co/spaces/vaatus/agentready-judge-demo |
 | Chaos-remediation LoRA (HF) | https://huggingface.co/vaatus/agentready-chaos-remediation-lora-v0 |
 | Real auto-PR (BabyAGI) | https://github.com/vaatus/babyagi/pull/1 |
-| Embeddable badge | `<img src="http://134.199.203.147:8002/agent/{slug}/badge.svg">` |
+| Embeddable badge | [Codecov-style SVG endpoint](#embeddable-badge) — drop into your README |
+
+## Embeddable badge
+
+Show your agent's OWASP ASI-2026 score on your README:
+
+```markdown
+[![OWASP ASI-2026](http://134.199.203.147:8002/agent/your-slug/badge.svg)](http://134.199.203.147:3000/agent/your-slug)
+```
+
+Color-coded: emerald for ≥85, yellow-gold for 70-84, gold for 55-69, red for <55. Refreshes on every re-scan.
 
 The full stack — the FastAPI backend, the Next.js frontend, and the Qwen 2.5 7B Judge served via vLLM 0.17 / ROCm 7.2 — runs on a single AMD Instinct MI300X via the AMD Developer Cloud, with ~95 GB of 192 GB VRAM in use.
 

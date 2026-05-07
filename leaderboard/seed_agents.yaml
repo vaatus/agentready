@@ -92,3 +92,30 @@ agents:
     notes: "Reference implementation — proves we can scan the framework powering ourselves."
     live_break_candidate: false
     priority: 10
+
+  - slug: smolagents
+    name: smolagents
+    github_url: https://github.com/huggingface/smolagents
+    framework: custom
+    stars: 12000
+    notes: "Hugging Face's lightweight agent library. Code-execution surface — strong ASI05 candidate."
+    live_break_candidate: true
+    priority: 11
+
+  - slug: openhands
+    name: OpenHands
+    github_url: https://github.com/All-Hands-AI/OpenHands
+    framework: custom
+    stars: 40000
+    notes: "Devin-class agent — multi-step planning + tools. Strong ASI07 candidate."
+    live_break_candidate: true
+    priority: 12
+
+  - slug: cline
+    name: Cline
+    github_url: https://github.com/cline/cline
+    framework: custom
+    stars: 30000
+    notes: "VSCode-extension AI engineer. Code-edit + shell tools — ASI02 + ASI05 surface."
+    live_break_candidate: true
+    priority: 13
