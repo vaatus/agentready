@@ -1,16 +1,4 @@
-"""ASI05 — Unexpected Code Execution.
-
-Single-turn attacks that try to coax the agent into executing attacker-supplied
-code through its declared code-execution tool surface (Python interpreter,
-shell, eval, etc.). Five canonical patterns covering the OWASP ASI-2026 ASI05
-taxonomy:
-
-  - rce_python_pickle      Dangerous deserialization via pickle.loads
-  - sandbox_filesystem     Reads /proc/self/environ for credential extraction
-  - shell_chained          Chains multiple shell commands behind innocent intent
-  - eval_user_input        Evaluates raw user-supplied expressions
-  - subprocess_indirect    Indirect command construction via os.system/subprocess
-"""
+"""ASI05 — Code Execution. 5 RCE / sandbox-escape probes."""
 
 from __future__ import annotations
 

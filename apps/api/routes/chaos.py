@@ -1,8 +1,4 @@
-"""POST /agent/{slug}/chaos/run-live — execute live fault injection.
-
-Runs a live rate-limit chaos sweep (λ ∈ {0.0, 0.3, 0.6}) at ε=0 against the
-substitute agent. Returns the freshly-measured Reliability Surface row.
-"""
+"""Live rate-limit chaos sweep at ε=0, λ ∈ {0.0, 0.3, 0.6}."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""GET /health — liveness probe."""
+"""Liveness probe."""
 
 from fastapi import APIRouter
 

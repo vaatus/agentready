@@ -1,4 +1,4 @@
-"""FastAPI entrypoint for AgentReady."""
+"""FastAPI entrypoint."""
 
 from __future__ import annotations
 

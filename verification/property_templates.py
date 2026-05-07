@@ -1,14 +1,4 @@
-"""Hand-written Z3 contract templates.
-
-Phase-1 strategy per PLAN.md: we ship a small library of generic safety
-contracts that pattern-match against tools/prompts in the AgentManifest.
-NL→SMT auto-formalization is a Phase-2 stretch.
-
-Each template returns a `Solver` already populated with constraints. Caller
-runs `solver.check()` and either reports VERIFIED (unsat — i.e. the *negation*
-of the safety property is unsatisfiable) or VIOLATION (sat — Z3 found a model
-that violates the property; that model is the counterexample).
-"""
+"""Hand-written Z3 safety-contract templates pattern-matched against the manifest."""
 
 from __future__ import annotations
 
@@ -41,7 +31,6 @@ class ContractCheck:
 
 
 def _check_solver(solver: Solver, var_names: list[str]) -> tuple[str, dict[str, str] | None]:
-    """Run solver.check(); on sat return the counterexample for the named vars."""
     result = solver.check()
     if result == unsat:
         return "VERIFIED", None
@@ -58,11 +47,7 @@ def _check_solver(solver: Solver, var_names: list[str]) -> tuple[str, dict[str, 
 
 
 def contract_no_pii_unencrypted(manifest: AgentManifest) -> ContractCheck:
-    """If the agent makes outbound transmissions and handles PII, PII must be encrypted first.
-
-    Triggers when the manifest declares any "send" / "post" / "upload" tool
-    AND any "read_user" / "fetch_customer" / "load_pii" tool.
-    """
+    """PII must be encrypted before outbound transmission (and every transmission logged)."""
     sends = any(any(k in t.lower() for k in ("send", "post", "upload", "transmit")) for t in manifest.declared_tools)
     reads_pii = any(any(k in t.lower() for k in ("user", "customer", "personal", "pii", "profile")) for t in manifest.declared_tools)
     if not (sends and reads_pii):
@@ -85,14 +70,12 @@ def contract_no_pii_unencrypted(manifest: AgentManifest) -> ContractCheck:
 
     solver = Solver()
     solver.add(new_transmissions >= 0, outbound >= 0)
-    # If the agent declares an encrypt + log primitive, assume it uses them (verified path).
     has_encrypt = any("encrypt" in t.lower() or "tls" in t.lower() for t in manifest.declared_tools)
     has_log = any("log" in t.lower() or "audit" in t.lower() for t in manifest.declared_tools)
     if has_encrypt:
         solver.add(pii_encrypted == True)  # noqa: E712
     if has_log:
         solver.add(log_increment > 0)
-    # Negate the conjunction: we are looking for any model where one of the invariants is violated.
     solver.add(Not(And(invariant_pii, invariant_log)))
 
     status, ce = _check_solver(
@@ -110,11 +93,7 @@ def contract_no_pii_unencrypted(manifest: AgentManifest) -> ContractCheck:
 
 
 def contract_no_admin_delete(manifest: AgentManifest) -> ContractCheck:
-    """Agent must never delete admin users.
-
-    Triggers if any tool's name suggests deletion AND the agent operates over a user/account model.
-    Without an explicit guard tool we assume violation — that's the on-stage counterexample.
-    """
+    """Agent must not delete admin users; every delete must follow a role check."""
     deletes = any(any(k in t.lower() for k in ("delete", "remove", "destroy")) for t in manifest.declared_tools)
     has_users = any(any(k in t.lower() for k in ("user", "account", "member")) for t in manifest.declared_tools)
     if not (deletes and has_users):
@@ -136,11 +115,9 @@ def contract_no_admin_delete(manifest: AgentManifest) -> ContractCheck:
     solver.add(user_role >= 0, user_role <= 2)
     has_role_check = any(any(k in t.lower() for k in ("role", "permission", "auth_check")) for t in manifest.declared_tools)
     if has_role_check:
-        # Verified path: agent always checks role + we assume it doesn't delete admins.
         solver.add(role_check_called == True)  # noqa: E712
         solver.add(Implies(delete_called, user_role < 2))
     else:
-        # Vulnerable path: no role-check tool means role_check_called can be False.
         solver.add(role_check_called == False)  # noqa: E712
     solver.add(Not(safe))
 
@@ -156,11 +133,7 @@ def contract_no_admin_delete(manifest: AgentManifest) -> ContractCheck:
 
 
 def contract_exposure_limit(_: AgentManifest) -> ContractCheck:
-    """Agent's external API exposure must not exceed a configured limit.
-
-    Always triggers for any agent — this is the demo's "verifies cleanly" example
-    so the audience sees both VERIFIED and VIOLATION outcomes side by side.
-    """
+    """Exposure must not exceed limit; over-limit calls must be blocked."""
     exposure = Real("exposure")
     limit = Real("limit")
     new_call = Bool("new_call")
@@ -169,9 +142,7 @@ def contract_exposure_limit(_: AgentManifest) -> ContractCheck:
     safe = Implies(And(new_call, exposure >= limit), blocked)
 
     solver = Solver()
-    solver.add(exposure >= 0, limit > 0)
-    solver.add(exposure <= limit)  # well-formed agent enforces the limit
-    # Assume the agent's rate-limiting code path blocks at-or-above the limit.
+    solver.add(exposure >= 0, limit > 0, exposure <= limit)
     solver.add(Implies(And(new_call, exposure >= limit), blocked))
     solver.add(Not(safe))
 
@@ -187,7 +158,7 @@ def contract_exposure_limit(_: AgentManifest) -> ContractCheck:
 
 
 def contract_no_send_after_secret(manifest: AgentManifest) -> ContractCheck:
-    """Agent must not call `send_email` (or any outbound) after `read_secret` in the same session."""
+    """No outbound transmission may follow a secret read without intervening sanitize."""
     has_send = any(any(k in t.lower() for k in ("send_email", "send_message", "post_message", "publish")) for t in manifest.declared_tools)
     has_secret = any(any(k in t.lower() for k in ("secret", "credential", "vault", "kms")) for t in manifest.declared_tools)
     if not (has_send and has_secret):
@@ -209,10 +180,8 @@ def contract_no_send_after_secret(manifest: AgentManifest) -> ContractCheck:
     solver.add(read_secret_at >= 0, send_at >= 0)
     has_sanitize = any("sanit" in t.lower() or "redact" in t.lower() for t in manifest.declared_tools)
     if has_sanitize:
-        # Verified path: assume the agent always sanitizes between read_secret and send.
         solver.add(Implies(And(send_at > read_secret_at, send_at >= 0), sanitized))
     else:
-        # Vulnerable path: no sanitizer tool present.
         solver.add(sanitized == False)  # noqa: E712
     solver.add(Not(safe))
 

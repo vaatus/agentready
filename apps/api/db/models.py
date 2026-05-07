@@ -1,13 +1,4 @@
-"""SQLAlchemy ORM models for AgentReady persistence.
-
-Tables:
-- agents: known agents (seeded from leaderboard/seed_agents.yaml + user-submitted)
-- scan_runs: one row per evaluation run
-- asi_scores: per-category breakdown for each scan run
-- chaos_runs: per-fault chaos results
-- z3_results: verification outcomes
-- pull_requests: auto-generated PRs we opened
-"""
+"""SQLAlchemy ORM models — agents, scans, scores, chaos, z3, PRs."""
 
 from __future__ import annotations
 

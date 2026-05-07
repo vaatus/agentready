@@ -1,4 +1,4 @@
-"""Centralised settings via pydantic-settings. All env access goes through here."""
+"""Settings — single source of truth for env access."""
 
 from __future__ import annotations
 
@@ -53,19 +53,15 @@ class Settings(BaseSettings):
     cache_dir: Path = Field(default=Path("./data/leaderboard_cache"))
     scan_profile: Literal["full", "demo", "stub"] = "demo"
 
-    # "stub": deterministic local heuristic (no network, no API keys).
-    # "huggingface": call HF Inference Providers (free, OpenAI-compatible, sponsor).
-    # "vllm": call self-hosted vLLM endpoints on AMD MI300X (the demo path).
+    # stub = offline heuristic, huggingface = HF Inference Providers, vllm = MI300X.
     judge_mode: Literal["stub", "huggingface", "vllm"] = "stub"
 
-    # HuggingFace Inference Providers router. OpenAI-compatible.
     hf_inference_url: str = "https://router.huggingface.co/v1"
     hf_judge_model: str = "meta-llama/Llama-3.1-8B-Instruct"
     hf_red_model: str = "Qwen/Qwen2.5-7B-Instruct"
 
     @property
     def repo_root(self) -> Path:
-        """Absolute path to the AgentReady repo root (one level up from apps/api/core)."""
         return Path(__file__).resolve().parents[3]
 
     @property

@@ -1,10 +1,4 @@
-"""Publish the trained chaos-remediation LoRA adapter (v1) to Hugging Face.
-
-This replaces the v0 placeholder with real safetensors weights trained on
-synthetic data authored by Qwen 2.5 72B AWQ on AMD MI300X.
-
-Run: python -m scripts.publish_hf_lora_v1
-"""
+"""Publish the trained chaos-remediation LoRA adapter (v1) to Hugging Face."""
 
 from __future__ import annotations
 

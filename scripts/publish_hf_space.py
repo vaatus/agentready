@@ -1,17 +1,4 @@
-"""Publish the AgentReady Judge demo as a HuggingFace Space.
-
-The Space hosts a small Gradio app exposing the Judge verdict as a public
-API: you paste a baseline response, an attacked response, and an attack
-intent; the Space runs the same heuristic the AgentReady StubJudgeClient
-uses (no GPU runtime cost) and returns the verdict.
-
-In production the Judge runs Qwen 2.5 7B on AMD MI300X via vLLM. The Space
-is a sponsor-track artifact: a public, free-tier HF Space documenting the
-methodology and providing a try-it-yourself verdict tool.
-
-Run: python -m scripts.publish_hf_space
-Reads HF_TOKEN from .env via apps.api.core.config.
-"""
+"""Publish the Judge demo as a HuggingFace Space (Gradio)."""
 
 from __future__ import annotations
 

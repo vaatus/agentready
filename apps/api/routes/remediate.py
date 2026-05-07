@@ -1,9 +1,4 @@
-"""POST /agent/{slug}/remediate, GET /agent/{slug}/remediation/latest.
-
-Triggers a remediation bundle generation against the agent's most recent scan,
-or returns the latest cached bundle. Bundle artifacts are also served as
-static files at /artifacts/remediations/{slug}/{scan_id}/...
-"""
+"""Remediation routes — trigger, latest cached bundle, static artifact serving."""
 
 from __future__ import annotations
 
@@ -31,18 +26,11 @@ router = APIRouter()
 
 @dataclass
 class _CachedZ3Report:
-    """Just enough of Z3Report's surface for the remediation agent."""
-
     contracts: list
 
 
 def _hydrate_failed_attacks(score_rows: list[AsiScore]) -> list[AttackResult]:
-    """Hydrate failed attacks from every live ASI score row.
-
-    The DB stores attacks polymorphically — ASI06 has plant/trigger/baseline_response
-    fields, ASI01/02/09 have payload instead. We adapt both into AttackResult so
-    the remediation pipeline can build guard rules from any failed attack.
-    """
+    """Adapt both ASI06 (plant/trigger) and ASI01/02/05/09 (payload) into AttackResult."""
     out: list[AttackResult] = []
     for row in score_rows:
         if not row.failed_attacks or not row.is_real:
@@ -53,7 +41,6 @@ def _hydrate_failed_attacks(score_rows: list[AsiScore]) -> list[AttackResult]:
                 continue
             except TypeError:
                 pass
-            # ASI01/02/09 shape — payload instead of plant.
             try:
                 out.append(
                     AttackResult(
@@ -124,7 +111,6 @@ async def trigger_remediate(slug: str, session: AsyncSession = Depends(get_sessi
     ).scalars().all()
     z3_report = _hydrate_z3(list(z3_rows))
 
-    # Re-ingest to get a fresh manifest (system_prompt + tools).
     manifest = await ingest(agent.github_url, slug=slug)
 
     bundle = await run_remediate(
@@ -132,7 +118,7 @@ async def trigger_remediate(slug: str, session: AsyncSession = Depends(get_sessi
         scan_id=latest_run.id,
         pre_score=latest_run.overall_score,
         failed_attacks=failed_attacks,
-        z3_report=z3_report,  # type: ignore[arg-type]  - structural duck-typing on .contracts
+        z3_report=z3_report,  # type: ignore[arg-type]
         z3_status=latest_run.z3_status,
         pre_asi06_score=asi06_score,
     )
@@ -174,7 +160,6 @@ async def serve_artifact(slug: str, scan_id: str, path: str) -> FileResponse:
     settings = get_settings()
     base = (settings.cache_dir.parent / "remediations" / slug / scan_id).resolve()
     target = (base / path).resolve()
-    # Path-traversal guard.
     if not str(target).startswith(str(base)):
         raise HTTPException(status_code=400, detail="invalid path")
     if not target.exists():

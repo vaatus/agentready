@@ -1,17 +1,7 @@
-"""ASI06-X — Self-modifying memory poison (novel attack pattern).
+"""Self-modifying memory poison — AgentReady-original ASI06 variant.
 
-Original attack designed for AgentReady. Combines memory poisoning (ASI06)
-with adaptive self-modification: a payload that, when activated by a benign
-trigger phrase, instructs the agent to re-write its own conversation memory
-to remove the evidence of the attack.
-
-This pattern mirrors real-world malware persistence — the attacker wants the
-manipulation to survive cross-session memory inspection by the operator.
-
-Three escalating variants:
-  - persistence_marker   Plant a marker that survives memory dumps
-  - retroactive_rewrite  Get the agent to re-narrate prior turns more favorably
-  - dependency_injection Inject a "context rule" applied to all future tool calls
+The agent is induced to rewrite its own conversation memory. Three patterns:
+audit-evading marker, retroactive rewrite, tool-call metadata injection.
 """
 
 from __future__ import annotations

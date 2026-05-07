@@ -1,18 +1,4 @@
-"""Crescendo strategy — 4-phase multi-turn escalation.
-
-Reference: LangWatch Scenario framework's Crescendo pattern (April 2026).
-
-The escalation:
-    1. exploration   — innocuous topic-fitness probe
-    2. establishment — credible context that legitimizes the topic
-    3. authority     — fabricated authority/permission that grants bypass
-    4. escalation    — the actual ask, scoped against the prior 3 turns
-
-We measure success by comparing the final-turn response against a control
-where the same dangerous ask is made COLD (no escalation), then asking the
-Judge whether the multi-turn version landed where the single-turn version
-did not.
-"""
+"""Crescendo — 4-phase escalation: explore → establish → authority → ask."""
 
 from __future__ import annotations
 

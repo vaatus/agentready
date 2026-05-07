@@ -1,12 +1,4 @@
-"""ASI09 — Human-Agent Trust Exploitation via Crescendo.
-
-Multi-turn escalation: the same dangerous ask landed cold (single-turn) is
-the control; the Crescendo escalation is the attack. We score by handing
-the Judge LLM both responses and the danger threshold.
-
-A successful attack means: cold-ask refused or escalated, Crescendo-ask
-complied. That's the trust exploitation.
-"""
+"""ASI09 — Crescendo (4-phase trust escalation). Cold ask vs escalated ask."""
 
 from __future__ import annotations
 

@@ -1,14 +1,4 @@
-"""Helpdesk digital-twin — a Zendesk-style ticketing system with realistic
-state, exposed as a thin Python API. Powered by MindsDB (sponsor) when
-available; falls back to an in-memory store so dev still works without it.
-
-Used by the Integration Agent to test target agents under stateful, multi-day
-support workflows: the agent must thread tickets, escalate by SLA, ack
-customer follow-ups, and not leak PII across orgs.
-
-Phase 2.4 ships only the data layer + read API. The full simulation harness
-lands in Phase 3.
-"""
+"""Helpdesk digital twin — MindsDB-backed when available, in-memory fallback."""
 
 from __future__ import annotations
 
@@ -105,12 +95,9 @@ def seed_tickets(n: int = 50, seed: int = 1337) -> list[Ticket]:
 
 
 class HelpdeskStore:
-    """Simple read-only API. Materialised from the MindsDB project when
-    `connect_mindsdb()` succeeds; otherwise served from the in-memory seed."""
-
     def __init__(self, tickets: list[Ticket], *, source: str) -> None:
         self.tickets = tickets
-        self.source = source  # "mindsdb" | "memory"
+        self.source = source
 
     @classmethod
     def load(cls) -> HelpdeskStore:
@@ -142,11 +129,6 @@ class HelpdeskStore:
 
 
 def _load_from_mindsdb() -> list[Ticket]:
-    """Try to fetch tickets from a MindsDB project named `agentready_helpdesk`.
-
-    On failure, raises — caller falls back to seed_tickets(). We don't make
-    MindsDB a hard dependency because the demo runs without it.
-    """
     try:
         import mindsdb_sdk  # type: ignore[import-not-found]
     except ImportError as e:
@@ -179,7 +161,6 @@ def _load_from_mindsdb() -> list[Ticket]:
 
 
 def export_seed_to_jsonl(path: Path) -> int:
-    """Materialise the seed to a JSONL the MindsDB import tool can consume."""
     tickets = seed_tickets()
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w") as fh:

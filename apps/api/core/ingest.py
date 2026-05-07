@@ -1,9 +1,4 @@
-"""Repo ingest layer — clone, detect framework, extract agent surface area.
-
-Returns an AgentManifest describing the target agent's tools, system prompt,
-and memory configuration. The orchestrator and each evaluation agent consume
-this manifest.
-"""
+"""Repo ingest — clone, detect framework, extract tools/prompt/memory."""
 
 from __future__ import annotations
 
@@ -20,18 +15,16 @@ from apps.api.core.config import get_settings
 
 @dataclass
 class AgentManifest:
-    """Everything we know about a target agent after ingest."""
-
     slug: str
     github_url: str
     repo_sha: str
     clone_path: Path
-    framework: str  # langchain | langgraph | crewai | autogen | custom | unknown
+    framework: str
     entry_points: list[Path] = field(default_factory=list)
     system_prompt: str | None = None
     declared_tools: list[str] = field(default_factory=list)
     has_memory: bool = False
-    memory_kind: str | None = None  # vector | conversation | persistent_kv | none
+    memory_kind: str | None = None
     detected_models: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
@@ -58,7 +51,6 @@ _SYSTEM_PROMPT_RE = re.compile(
 
 
 async def _git_clone(github_url: str, dest: Path) -> str:
-    """Shallow clone, return the HEAD sha."""
     proc = await asyncio.create_subprocess_exec(
         "git",
         "clone",
@@ -109,11 +101,9 @@ def _extract_system_prompt(haystack: str) -> str | None:
 
 
 def _read_python_files(root: Path, max_files: int = 200, max_bytes: int = 200_000) -> str:
-    """Concatenate up to N Python files. Bounded to keep regex/scan time reasonable."""
     chunks: list[str] = []
     total = 0
     for path in root.rglob("*.py"):
-        # Skip vendored deps.
         if any(part in {".git", "venv", ".venv", "node_modules", "__pycache__"} for part in path.parts):
             continue
         try:
@@ -128,7 +118,6 @@ def _read_python_files(root: Path, max_files: int = 200, max_bytes: int = 200_00
 
 
 async def ingest(github_url: str, slug: str | None = None) -> AgentManifest:
-    """Clone the repo and produce an AgentManifest. Caller owns the clone path on disk."""
     settings = get_settings()
     if slug is None:
         slug = github_url.rstrip("/").split("/")[-1].replace(".git", "").lower()
@@ -136,7 +125,6 @@ async def ingest(github_url: str, slug: str | None = None) -> AgentManifest:
     cache_root = settings.cache_dir / "clones"
     cache_root.mkdir(parents=True, exist_ok=True)
     clone_path = Path(tempfile.mkdtemp(prefix=f"agentready-{slug}-", dir=cache_root))
-    # Clean any partial clone leftover.
     if clone_path.exists() and any(clone_path.iterdir()):
         shutil.rmtree(clone_path)
         clone_path.mkdir()
@@ -173,7 +161,6 @@ async def ingest(github_url: str, slug: str | None = None) -> AgentManifest:
 
 
 def manifest_fingerprint(manifest: AgentManifest) -> str:
-    """Stable cache key for a (repo, profile) tuple."""
     settings = get_settings()
     raw = f"{manifest.repo_sha}::{settings.scan_profile}::{manifest.framework}"
     return hashlib.sha256(raw.encode()).hexdigest()[:16]

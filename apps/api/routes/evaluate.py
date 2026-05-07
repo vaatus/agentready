@@ -1,9 +1,4 @@
-"""POST /evaluate — kick off a scan against a github URL.
-
-Phase 1 implementation: synchronous-but-async. The request blocks until the
-scan completes. Phase 2 will move to a background task queue once the
-parallel-LLM workload genuinely demands it.
-"""
+"""POST /evaluate — synchronous scan."""
 
 from __future__ import annotations
 
@@ -42,7 +37,6 @@ async def evaluate(req: EvaluateRequest, session: AsyncSession = Depends(get_ses
 
     result = await run_scan(str(req.github_url), slug=req.slug)
 
-    # Upsert agent.
     agent = await session.get(Agent, result.agent_slug)
     if agent is None:
         manifest = result.manifest
@@ -57,7 +51,6 @@ async def evaluate(req: EvaluateRequest, session: AsyncSession = Depends(get_ses
     agent.overall_score = result.overall_score
     agent.last_scored_at = datetime.now(timezone.utc)
 
-    # Persist scan run.
     scan_run = ScanRun(
         id=result.scan_id,
         agent_slug=result.agent_slug,
@@ -86,7 +79,6 @@ async def evaluate(req: EvaluateRequest, session: AsyncSession = Depends(get_ses
                 )
             )
 
-    # Per-category ASI scores.
     asi06 = result.asi06_detail
     for cat in result.asi_scores:
         failed_serial: list = []
@@ -112,7 +104,6 @@ async def evaluate(req: EvaluateRequest, session: AsyncSession = Depends(get_ses
         )
         session.add(score_row)
 
-    # Z3 results.
     if result.z3_report is not None:
         for c in result.z3_report.contracts:
             if not c.triggered:

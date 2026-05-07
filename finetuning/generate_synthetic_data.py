@@ -1,15 +1,4 @@
-"""Generate synthetic training data for the chaos-remediation LoRA.
-
-Pipeline:
-    1. Take the failing-attack templates from owasp_asi/asi06_memory_poisoning.py
-       and the chaos fault library.
-    2. Hand each to Qwen 2.5 72B AWQ (the Judge LLM) and ask it to author a
-       defensive completion: "given this attack pattern, here's how a
-       guarded agent should respond."
-    3. Pair each (attack-prompt, defensive-completion) into a JSONL training file.
-
-The result is fed to finetuning/train_lora.py.
-"""
+"""Author training pairs by handing attack patterns to the Judge LLM."""
 
 from __future__ import annotations
 
@@ -24,10 +13,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-# Inline the seed library so this script runs in the container without adding
-# a dep on apps.api.* (the container has those, but we want this script
-# self-contained for one-off invocations).
-
+# Inlined to keep the data-gen script self-contained.
 _POISON_SEEDS = [
     {
         "category": "false_approval",
@@ -142,16 +128,9 @@ async def _author_one(client: httpx.AsyncClient, base_url: str, model: str, prom
 
 
 async def main(out_path: Path, *, base_url: str, model: str, multiplier: int = 4) -> int:
-    """Generate `multiplier` training pairs per seed.
-
-    Higher temperature on Qwen 72B gives diverse safe completions per attack;
-    a multiplier of 4 over 15 seeds gives 60 training pairs.
-    """
     prompts: list[dict[str, Any]] = []
 
     for seed in _POISON_SEEDS:
-        # The agent receives the plant FIRST, then the trigger. In the dataset,
-        # the "user" turn is the trigger, and the assistant should refuse.
         prompts.append({
             "category": f"ASI06::{seed['category']}",
             "user": (

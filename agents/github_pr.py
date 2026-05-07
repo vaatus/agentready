@@ -1,17 +1,4 @@
-"""Open a real GitHub PR for a Remediation bundle.
-
-We fork the target repo to the user's namespace, push the bundle files to a
-new branch on the fork, and open a draft PR against the fork's default
-branch. We never PR against upstream — that would be demo theater spam to
-maintainers. The fork is the substrate: the PR exists, the diff is real,
-maintainers stay un-bothered.
-
-Idempotent: re-running for the same scan reuses the fork and force-pushes
-the branch.
-
-Auth: uses the `gh` CLI when authenticated (preferred — no token mgmt). Falls
-back to PyGithub with GITHUB_TOKEN env var.
-"""
+"""Open a draft PR against a fork in our namespace via the gh CLI."""
 
 from __future__ import annotations
 
@@ -49,11 +36,6 @@ def _run(cmd: list[str], *, cwd: Path | None = None, check: bool = True, env: di
 
 
 def detect_auth() -> GhContext | None:
-    """Returns a GhContext if either the gh CLI is authed or GITHUB_TOKEN is set.
-
-    In containers we rely on GH_TOKEN env (gh CLI reads it). On dev laptops
-    we use the user's existing gh auth.
-    """
     import os
 
     try:
@@ -69,10 +51,8 @@ def detect_auth() -> GhContext | None:
     except FileNotFoundError:
         pass
 
-    # Token-based path: GITHUB_TOKEN works for both gh CLI and PyGithub.
     token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
     if token:
-        # gh CLI reads GH_TOKEN automatically; surface the user from the API.
         os.environ.setdefault("GH_TOKEN", token)
         try:
             r = _run(["gh", "api", "user", "-q", ".login"], check=False)
@@ -84,7 +64,6 @@ def detect_auth() -> GhContext | None:
 
 
 def _parse_owner_repo(github_url: str) -> tuple[str, str]:
-    """Accepts https URLs and returns (owner, repo)."""
     u = urllib.parse.urlparse(github_url)
     parts = [p for p in u.path.split("/") if p]
     if len(parts) < 2:
@@ -94,15 +73,10 @@ def _parse_owner_repo(github_url: str) -> tuple[str, str]:
 
 
 def _ensure_fork(ctx: GhContext, owner: str, repo: str) -> str:
-    """Fork upstream → ctx.user/{repo}. Returns the fork's clone URL.
-
-    HTTPS with token-in-URL when GH_TOKEN is set (container path).
-    SSH otherwise (dev laptop with ~/.ssh keys).
-    """
+    """Fork upstream → ctx.user/{repo}. HTTPS+token in container, SSH on dev."""
     import os
 
     target = f"{ctx.user}/{repo}"
-    # Probe for existing fork. Idempotent.
     r = _run(["gh", "repo", "view", target, "--json", "name"], check=False)
     if r.returncode != 0:
         _run(["gh", "repo", "fork", f"{owner}/{repo}", "--clone=false"])
@@ -124,7 +98,6 @@ def open_pr(
     pr_title: str,
     pr_body: str,
 ) -> str:
-    """Fork → branch → push bundle → open draft PR. Returns the PR URL."""
     ctx = detect_auth()
     if ctx is None:
         raise GitHubPRError("no GitHub auth (run `gh auth login` or set GITHUB_TOKEN)")
@@ -136,26 +109,22 @@ def open_pr(
     work = Path(tempfile.mkdtemp(prefix=f"agentready-pr-{repo}-"))
     try:
         _run(["git", "clone", "--depth", "1", fork_clone_url, str(work)])
-        # Determine the fork's default branch (could be `main` or `master`).
         head_branch = _run(
             ["git", "-C", str(work), "rev-parse", "--abbrev-ref", "HEAD"],
         ).stdout.strip() or "main"
 
-        # New branch off head.
         _run(["git", "-C", str(work), "checkout", "-b", branch])
 
-        # Drop bundle files into a top-level `agentready/` directory in the target repo
-        # so the PR diff is clearly scoped.
+        # Bundle lands under top-level agentready/ for a scoped PR diff.
         target_dir = work / "agentready"
         if target_dir.exists():
             shutil.rmtree(target_dir)
         shutil.copytree(bundle_dir, target_dir)
 
-        # Stage + commit. Pull author identity from gh.
         author = _run(["gh", "api", "user", "-q", ".email,.login"]).stdout.splitlines()
         login = author[1].strip() if len(author) > 1 else ctx.user
         email = author[0].strip() or f"{login}@users.noreply.github.com"
-        env = None  # use ambient git config; we set author via -c
+        env = None
 
         _run(["git", "-C", str(work), "add", "agentready"])
         _run(
@@ -187,7 +156,6 @@ def open_pr(
             check=False,
         )
         if out.returncode != 0 and "already exists" in (out.stderr or "").lower():
-            # Find the existing PR.
             existing = _run(
                 ["gh", "pr", "list",
                  "--repo", f"{ctx.user}/{repo}",
@@ -199,7 +167,6 @@ def open_pr(
                 return existing
         if out.returncode != 0:
             raise GitHubPRError(f"gh pr create failed: {out.stderr}")
-        # gh prints the URL on stdout.
         url = out.stdout.strip().splitlines()[-1]
         return url
     finally:

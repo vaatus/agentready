@@ -1,4 +1,4 @@
-"""GET /agent/{slug}/badge.svg — Codecov-style badge for embedding in READMEs."""
+"""Codecov-style SVG badge for embedding."""
 
 from __future__ import annotations
 
@@ -12,7 +12,6 @@ router = APIRouter()
 
 
 def _color(score: float | None) -> tuple[str, str]:
-    """Return (right-side fill, label) for the badge."""
     if score is None:
         return "#9f9f9f", "—"
     if score >= 85:
@@ -52,6 +51,5 @@ async def badge(slug: str, session: AsyncSession = Depends(get_session)) -> Resp
     return Response(
         content=svg,
         media_type="image/svg+xml",
-        # No cache so the badge updates immediately when the score changes.
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
     )

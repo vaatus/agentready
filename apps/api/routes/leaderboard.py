@@ -1,9 +1,4 @@
-"""GET /leaderboard, GET /agent/{slug}.
-
-The leaderboard is the centerpiece of the demo: famous open-source AI agents
-ranked against OWASP ASI-2026. Pre-scored entries are cached in the DB; users
-hitting the public site never trigger live scans.
-"""
+"""Leaderboard + per-agent report."""
 
 from __future__ import annotations
 
@@ -65,7 +60,6 @@ async def get_agent(slug: str, session: AsyncSession = Depends(get_session)) -> 
             )
             if row.worst_failure:
                 worst_failures_by_category.append(row.worst_failure)
-        # Pick the highest-confidence failure across all live categories.
         if worst_failures_by_category:
             worst_failure = max(
                 worst_failures_by_category,

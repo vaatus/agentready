@@ -1,4 +1,4 @@
-"""OWASP ASI-2026 compliance certificate (PDF, signed-look)."""
+"""1-page PDF compliance certificate."""
 
 from __future__ import annotations
 

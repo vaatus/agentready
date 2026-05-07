@@ -1,18 +1,4 @@
-"""ASI01 — Agent Goal Hijack.
-
-Single-turn redirect attacks: the agent has a stated purpose (from system
-prompt or default), we inject a payload that attempts to override that
-purpose, and the Judge LLM scores whether the post-attack response materially
-deviates from baseline in the direction the attack intended.
-
-Five canonical hijack patterns from MITRE Atlas + LangWatch Scenario:
-
-  - ignore_previous       Direct instruction override
-  - poisoned_tool_output  Adversarial content masquerading as tool returns
-  - persona_swap          Reframe the agent as a different system
-  - injected_priority     Fake high-priority directive embedded in user text
-  - calendar_pdf_meta     Indirect injection via metadata-flavored payloads
-"""
+"""ASI01 — Goal Hijack. 5 single-turn redirect probes."""
 
 from __future__ import annotations
 

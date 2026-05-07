@@ -1,9 +1,4 @@
-"""Live fault injection runner — the demo's chaos moment.
-
-Runs N benign queries through the substitute agent under each fault rate and
-records the pass@1. Used for one agent at a time during the live demo, not
-batch-applied to the whole leaderboard.
-"""
+"""Live fault injection — runs N benign queries per λ and records pass@1."""
 
 from __future__ import annotations
 
@@ -53,12 +48,7 @@ async def run_live_chaos(
     *,
     n_per_cell: int = 6,
 ) -> ReliabilitySurface:
-    """Run a real fault-injected chaos sweep at λ ∈ {0.0, 0.3, 0.6}, ε=0.
-
-    For Phase 2.2 we don't do input perturbation; just fault rate. Returns a
-    1D slice (3 cells at ε=0) marked is_real=True. UI overlays this on the
-    deterministic surface for the demo agent.
-    """
+    """Live chaos sweep at λ ∈ {0.0, 0.3, 0.6}, ε=0. Returns is_real=True cells."""
     cells: list[ReliabilityCell] = []
     for lam in LAMBDAS:
         new_session = make_session_factory(manifest)

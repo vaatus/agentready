@@ -1,16 +1,4 @@
-"""Train a Qwen 2.5 7B LoRA adapter on the chaos-remediation dataset.
-
-This runs on the MI300X via PEFT + transformers + trl (Unsloth/ROCm fallback path,
-since Unsloth is fragile on ROCm).
-
-Output: a `safetensors` adapter we push to HuggingFace as the v1 release of
-`vaatus/agentready-chaos-remediation-lora-v0`.
-
-Usage (inside an MI300X container with rocm pytorch):
-    python -m finetuning.train_lora \
-        --data /data/train/chaos_lora.jsonl \
-        --out /data/lora_adapters/chaos_v1
-"""
+"""Train a Qwen 2.5 7B LoRA adapter via PEFT+TRL on ROCm."""
 
 from __future__ import annotations
 
@@ -23,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def main(*, data_path: Path, out_path: Path, base_model: str, epochs: int, lora_r: int) -> None:
-    # Lazy imports — these are heavy.
+    # Heavy deps — lazy import.
     import torch
     from datasets import Dataset
     from peft import LoraConfig, get_peft_model

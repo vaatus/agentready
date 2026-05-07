@@ -1,19 +1,4 @@
-"""NL → SMT auto-formalization via Qwen 2.5 72B AWQ.
-
-Phase 2 stretch goal from the spec. Given the agent's natural-language safety
-properties (extracted from system prompt), have the Judge LLM author a Z3
-constraint we can hand to the solver.
-
-Workflow:
-    1. Extract candidate safety claims from system_prompt via regex/heuristic.
-    2. For each claim, ask Qwen 72B: "translate this English safety property
-       to a Z3 Python expression."
-    3. Eval the result inside a sandboxed namespace; on syntax error, fall
-       back to the template library.
-
-We never `eval` arbitrary text — the template returned by the LLM is a small
-DSL that is converted to Z3 calls via a guarded mapper.
-"""
+"""Translate one English safety claim into a Z3 contract via the Judge LLM."""
 
 from __future__ import annotations
 
@@ -85,7 +70,6 @@ def _build_solver(spec: dict) -> tuple[Solver, list[str]]:
 
 
 async def auto_formalize(safety_claim: str) -> AutoFormalizedContract:
-    """Try to formalize one English safety claim with the Judge LLM."""
     s = get_settings()
     if s.judge_mode != "vllm":
         return AutoFormalizedContract(
@@ -161,7 +145,6 @@ async def auto_formalize(safety_claim: str) -> AutoFormalizedContract:
 
 
 def to_contract_check(c: AutoFormalizedContract) -> ContractCheck:
-    """Adapt to the same dataclass the Z3 engine returns."""
     return ContractCheck(
         name=f"auto::{c.name}",
         description=c.description,

@@ -1,4 +1,4 @@
-"""Async SQLAlchemy session + engine setup."""
+"""Async SQLAlchemy engine + session."""
 
 from __future__ import annotations
 
@@ -19,12 +19,10 @@ SessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSe
 
 
 async def init_db() -> None:
-    """Create tables. Idempotent — runs at startup."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
 async def get_session() -> AsyncIterator[AsyncSession]:
-    """FastAPI dependency."""
     async with SessionLocal() as session:
         yield session

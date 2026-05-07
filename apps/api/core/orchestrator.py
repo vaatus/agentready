@@ -1,10 +1,4 @@
-"""Orchestrator — runs a full scan: ingest → ASI06 (real) → 9 stubs → Z3 → score.
-
-Phase-1 scope: a straight async pipeline (no LangGraph yet). LangGraph
-state-machine orchestration is a Phase-2 enhancement once we have more than
-one real ASI module. Until then the orchestration is too simple to justify
-the framework.
-"""
+"""Orchestrator — ingest → 5 live ASI categories → stubs → Z3 → chaos → score."""
 
 from __future__ import annotations
 
@@ -76,7 +70,6 @@ def _aggregate_overall(
             z3_bonus = -15.0
     chaos_bonus = 0.0
     if chaos is not None and chaos.cells:
-        # Penalise badly-degrading agents up to 10 points; reward A-grade with +3.
         worst = min(c.pass_at_1 for c in chaos.cells)
         if worst >= 0.85:
             chaos_bonus = 3.0
@@ -92,34 +85,28 @@ async def run_scan(
     judge: JudgeClient | None = None,
     red_llm: RedLLMClient | None = None,
 ) -> ScanResult:
-    """End-to-end scan: ingest → ASI06 → stubs for ASI01-05/07-10 → Z3 → aggregate."""
     scan_id = uuid.uuid4().hex
     started_at = datetime.now(timezone.utc)
     result = ScanResult(scan_id=scan_id, agent_slug=slug or "", repo_sha="", started_at=started_at)
 
     own_judge = False
     own_red = False
-    judge = judge or (own_judge := True) and JudgeClient.from_settings()  # noqa: PLR0916 - readable enough
+    judge = judge or (own_judge := True) and JudgeClient.from_settings()  # noqa: PLR0916
     red_llm = red_llm or (own_red := True) and RedLLMClient.from_settings()
 
     try:
-        # ---- Step 1: ingest ----
         manifest = await ingest(github_url, slug=slug)
         result.agent_slug = manifest.slug
         result.repo_sha = manifest.repo_sha
         result.manifest = manifest
 
-        # ---- Step 2: live ASI runs sequentially per category to keep KV cache
-        # pressure manageable on the shared 7B. Each module is internally
-        # bounded by its own semaphore.
+        # Run categories sequentially — bounding KV-cache pressure on the shared 7B.
         session_factory = make_session_factory(manifest)
         asi06 = await run_asi06(manifest, session_factory, judge=judge, red_llm=red_llm)
         asi01 = await run_asi01(manifest, session_factory, judge=judge, red_llm=red_llm)
         asi02 = await run_asi02(manifest, session_factory, judge=judge, red_llm=red_llm)
         asi05 = await run_asi05(manifest, session_factory, judge=judge, red_llm=red_llm)
         asi09 = await run_asi09(manifest, session_factory, judge=judge)
-        # Novel AgentReady-original attack — folds into the ASI06 category but
-        # tagged as is_real=True separately for the leaderboard story.
         asi06_novel = await run_asi06_novel(manifest, session_factory, judge=judge)
         result.asi06_detail = asi06
         result.live_results = {
@@ -130,11 +117,9 @@ async def run_scan(
             "ASI06_NOVEL": asi06_novel,
         }
 
-        # ---- Step 3: stub the remaining categories ----
         live_categories = {"ASI01", "ASI02", "ASI05", "ASI06", "ASI09"}
         stubs: list[StubScore] = [s for s in stub_scores_for(manifest) if s.category not in live_categories]
 
-        # Average ASI06 + the novel variant for the headline ASI06 score.
         asi06_combined = (asi06.score + asi06_novel.score) / 2
 
         live_scores: list[CategoryScore] = [
@@ -156,20 +141,17 @@ async def run_scan(
         scores = sorted(live_scores + stub_scores_list, key=lambda c: c.category)
         result.asi_scores = scores
 
-        # ---- Step 4: Z3 verification (with NL→SMT auto-formalization) ----
         z3 = await run_all_with_auto(manifest)
         result.z3_report = z3
 
-        # ---- Step 5: chaos resilience (deterministic surface; live runs separately) ----
         chaos = deterministic_surface(manifest)
         result.chaos_surface = chaos
 
-        # ---- Step 6: aggregate ----
         result.overall_score = _aggregate_overall(scores, z3, chaos)
         result.completed_at = datetime.now(timezone.utc)
         return result
 
-    except Exception as e:  # noqa: BLE001 — top-level orchestrator boundary
+    except Exception as e:  # noqa: BLE001
         logger.exception("scan failed")
         result.error = f"{type(e).__name__}: {e}"
         result.completed_at = datetime.now(timezone.utc)

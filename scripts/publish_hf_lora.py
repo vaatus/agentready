@@ -1,14 +1,4 @@
-"""Publish a placeholder PEFT LoRA adapter for the chaos-remediation pipeline.
-
-We push a real model repo with: README.md (model card), adapter_config.json
-(valid PEFT v0.13 format targeting Qwen 2.5 7B), and a small synthetic
-training-data sample. The actual adapter weights get trained on MI300X via
-Unsloth/PEFT in Phase 3 — this PR establishes the repo + naming + license
-the trained checkpoints will land into.
-
-Run: python -m scripts.publish_hf_lora
-Reads HF_TOKEN from .env via apps.api.core.config.
-"""
+"""Publish the v0 placeholder LoRA repo (config + sample data)."""
 
 from __future__ import annotations
 

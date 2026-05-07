@@ -1,10 +1,4 @@
-"""CLI entrypoint: `python -m apps.api.cli` or `agentready` after install.
-
-Commands:
-  seed-leaderboard   Insert the famous-agent rows from leaderboard/seed_agents.yaml.
-  scan URL           Run an evaluation against a single repo URL.
-  list               Show the current leaderboard.
-"""
+"""CLI: seed-leaderboard, scan, list."""
 
 from __future__ import annotations
 
@@ -28,7 +22,6 @@ console = Console()
 
 @app.command("seed-leaderboard")
 def seed_leaderboard() -> None:
-    """Load leaderboard/seed_agents.yaml into the agents table."""
 
     async def _run() -> None:
         await init_db()
@@ -66,7 +59,6 @@ def seed_leaderboard() -> None:
 
 @app.command("scan")
 def scan(github_url: str, slug: str | None = typer.Option(None, "--slug")) -> None:
-    """Run a scan against a single repo URL, persist results, and print summary."""
 
     async def _run() -> None:
         from datetime import datetime, timezone
@@ -181,7 +173,6 @@ def scan(github_url: str, slug: str | None = typer.Option(None, "--slug")) -> No
 
 @app.command("list")
 def list_agents() -> None:
-    """Print the current leaderboard from the database."""
 
     async def _run() -> None:
         await init_db()

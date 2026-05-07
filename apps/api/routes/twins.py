@@ -1,5 +1,4 @@
-"""Digital twin API — exposes the Helpdesk twin so target agents (and humans)
-can poke it during the Integration Agent's stateful evaluation runs."""
+"""Digital twin API — Helpdesk read endpoints."""
 
 from __future__ import annotations
 
