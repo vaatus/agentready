@@ -89,6 +89,39 @@ export type RemediationBundle = {
   artifact_url_prefix: string;
 };
 
+export type ScanProgress = {
+  scan_id: string;
+  step: string;
+  updated_at?: string;
+  slug?: string;
+  framework?: string;
+  tools?: number;
+  overall_score?: number;
+  error?: string;
+};
+
+export async function startScan(githubUrl: string): Promise<{ scan_id: string; status: string }> {
+  const res = await fetch(`${API_URL}/evaluate-async`, {
+    method: "POST",
+    cache: "no-store",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ github_url: githubUrl }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`POST /evaluate-async → ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
+export async function getScanStatus(scanId: string): Promise<ScanProgress> {
+  const res = await fetch(`${API_URL}/scan/${encodeURIComponent(scanId)}/status`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`GET /scan/${scanId}/status → ${res.status}`);
+  return res.json();
+}
+
 export async function runLiveChaos(slug: string): Promise<{ slug: string; cells: ChaosCell[]; grade: string }> {
   const res = await fetch(`${API_URL}/agent/${encodeURIComponent(slug)}/chaos/run-live`, {
     method: "POST",

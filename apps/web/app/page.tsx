@@ -52,11 +52,17 @@ export default async function HomePage() {
           single AMD MI300X.
         </p>
         {scored.length > 0 ? (
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-6 flex flex-wrap items-center gap-2">
             <Stat label="agents scored" value={String(scored.length)} />
             <Stat label="live ASI categories" value="5" />
             <Stat label="Judge LLM" value="Qwen 2.5 72B AWQ" />
             <Stat label="VRAM concurrent" value="~75 / 192 GB" highlight />
+            <a
+              href="/scan"
+              className="ml-auto inline-flex items-center gap-2 rounded-full border border-amd/40 bg-amd/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amd transition-colors hover:bg-amd/20"
+            >
+              Scan your own agent →
+            </a>
           </div>
         ) : null}
       </section>

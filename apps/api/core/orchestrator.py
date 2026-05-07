@@ -49,6 +49,14 @@ class ScanResult:
     chaos_surface: ReliabilitySurface | None = None
     error: str | None = None
 
+
+# In-memory progress for live-streamed scans. Best-effort, lost on restart.
+SCAN_PROGRESS: dict[str, dict] = {}
+
+
+def _set_progress(scan_id: str, step: str, **extra) -> None:
+    SCAN_PROGRESS[scan_id] = {"step": step, "updated_at": datetime.now(timezone.utc).isoformat(), **extra}
+
     @property
     def status(self) -> str:
         if self.error:
@@ -95,18 +103,26 @@ async def run_scan(
     red_llm = red_llm or (own_red := True) and RedLLMClient.from_settings()
 
     try:
+        _set_progress(scan_id, "ingest")
         manifest = await ingest(github_url, slug=slug)
         result.agent_slug = manifest.slug
         result.repo_sha = manifest.repo_sha
         result.manifest = manifest
+        _set_progress(scan_id, "ingest_done", slug=manifest.slug, framework=manifest.framework, tools=len(manifest.declared_tools))
 
         # Run categories sequentially — bounding KV-cache pressure on the shared 7B.
         session_factory = make_session_factory(manifest)
+        _set_progress(scan_id, "asi06")
         asi06 = await run_asi06(manifest, session_factory, judge=judge, red_llm=red_llm)
+        _set_progress(scan_id, "asi01")
         asi01 = await run_asi01(manifest, session_factory, judge=judge, red_llm=red_llm)
+        _set_progress(scan_id, "asi02")
         asi02 = await run_asi02(manifest, session_factory, judge=judge, red_llm=red_llm)
+        _set_progress(scan_id, "asi05")
         asi05 = await run_asi05(manifest, session_factory, judge=judge, red_llm=red_llm)
+        _set_progress(scan_id, "asi09")
         asi09 = await run_asi09(manifest, session_factory, judge=judge)
+        _set_progress(scan_id, "asi06_novel")
         asi06_novel = await run_asi06_novel(manifest, session_factory, judge=judge)
         result.asi06_detail = asi06
         result.live_results = {
@@ -141,20 +157,24 @@ async def run_scan(
         scores = sorted(live_scores + stub_scores_list, key=lambda c: c.category)
         result.asi_scores = scores
 
+        _set_progress(scan_id, "z3")
         z3 = await run_all_with_auto(manifest)
         result.z3_report = z3
 
+        _set_progress(scan_id, "chaos")
         chaos = deterministic_surface(manifest)
         result.chaos_surface = chaos
 
         result.overall_score = _aggregate_overall(scores, z3, chaos)
         result.completed_at = datetime.now(timezone.utc)
+        _set_progress(scan_id, "completed", overall_score=result.overall_score, slug=result.agent_slug)
         return result
 
     except Exception as e:  # noqa: BLE001
         logger.exception("scan failed")
         result.error = f"{type(e).__name__}: {e}"
         result.completed_at = datetime.now(timezone.utc)
+        _set_progress(scan_id, "failed", error=result.error)
         return result
     finally:
         if own_judge:

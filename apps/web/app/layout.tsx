@@ -30,6 +30,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Leaderboard
               </Link>
               <Link
+                href="/scan"
+                className="transition-colors hover:text-zinc-100"
+              >
+                Scan an agent
+              </Link>
+              <Link
                 href="/about"
                 className="transition-colors hover:text-zinc-100"
               >
