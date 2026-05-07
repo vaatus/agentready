@@ -4,11 +4,8 @@ const nextConfig = {
   experimental: {
     typedRoutes: false,
   },
-  env: {
-    AGENTREADY_API_URL: process.env.AGENTREADY_API_URL ?? "http://localhost:8000",
-  },
-  // We rsync to a deploy host where filesystem isn't writable for some traces.
-  output: "standalone",
+  // AGENTREADY_API_URL is read at runtime from process.env in lib/api.ts
+  // (server components only — never exposed to the client bundle).
 };
 
 export default nextConfig;
