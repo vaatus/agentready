@@ -11,14 +11,14 @@
 # AgentReady
 ## The public adversarial benchmark for AI agents
 
-**9 of 10 famous open-source AI agents fail OWASP ASI-2026.**
+**6 of 10 famous open-source AI agents fail OWASP ASI-2026** under live ASI01 + ASI02 + ASI06 + ASI09 attacks.
 Here's the proof.
 
 > AMD Developer Hackathon · lablab.ai · May 2026 · Powered by AMD MI300X
 
 ---
 
-## Slide 1 — The 9-of-10 problem
+## Slide 1 — The problem
 
 OWASP published the **Top 10 for Agentic Applications 2026** in December.
 A new industry standard for AI agent security.
