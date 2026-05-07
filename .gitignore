@@ -85,3 +85,6 @@ secrets/
 
 # Local-only planning, validation, handoff docs (never pushed)
 docs-local/
+
+# Claude Code session state
+.claude/
