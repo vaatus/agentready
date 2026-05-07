@@ -22,11 +22,13 @@ services:
     environment:
       - POSTGRES_URL=sqlite+aiosqlite:////data/agentready.db
       - JUDGE_MODE=vllm
-      - JUDGE_LLM_URL=http://localhost:8001/v1
+      # Use 127.0.0.1 not localhost — host-network containers resolve
+      # localhost to ::1 which uvicorn (bound to 0.0.0.0) doesn't serve.
+      - JUDGE_LLM_URL=http://127.0.0.1:8001/v1
       - JUDGE_LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
-      - RED_LLM_URL=http://localhost:8001/v1
+      - RED_LLM_URL=http://127.0.0.1:8001/v1
       - RED_LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
-      - PUBLIC_BASE_URL=http://${PUBLIC_HOST:-localhost}:3000
+      - PUBLIC_BASE_URL=http://${PUBLIC_HOST:-127.0.0.1}:3000
       - HF_TOKEN=${HF_TOKEN}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
     volumes:
@@ -42,7 +44,7 @@ services:
     container_name: agentready-web
     network_mode: host
     environment:
-      - AGENTREADY_API_URL=http://localhost:8002
+      - AGENTREADY_API_URL=http://127.0.0.1:8002
       - PORT=3000
       - HOSTNAME=0.0.0.0
     restart: unless-stopped
