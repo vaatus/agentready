@@ -8,6 +8,7 @@ the framework.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
 from dataclasses import dataclass, field
@@ -17,7 +18,10 @@ from agents.llm_clients import JudgeClient, RedLLMClient
 from agents.substitute_agent import make_session_factory
 from apps.api.core.ingest import AgentManifest, ingest
 from chaos.reliability_surface import ReliabilitySurface, deterministic_surface
+from owasp_asi._shared import CategoryResult
+from owasp_asi.asi01_goal_hijack import run_asi01
 from owasp_asi.asi06_memory_poisoning import Asi06Result, run_asi06
+from owasp_asi.asi09_human_trust import run_asi09
 from owasp_asi.stub_scores import StubScore, stub_scores_for
 from verification.z3_engine import Z3Report, run_all
 
@@ -43,6 +47,7 @@ class ScanResult:
     asi_scores: list[CategoryScore] = field(default_factory=list)
     z3_report: Z3Report | None = None
     asi06_detail: Asi06Result | None = None
+    live_results: dict[str, CategoryResult] = field(default_factory=dict)
     manifest: AgentManifest | None = None
     chaos_surface: ReliabilitySurface | None = None
     error: str | None = None
@@ -101,33 +106,30 @@ async def run_scan(
         result.repo_sha = manifest.repo_sha
         result.manifest = manifest
 
-        # ---- Step 2: ASI06 (the real one) ----
+        # ---- Step 2: live ASI runs in parallel — ASI01, ASI06, ASI09 ----
         session_factory = make_session_factory(manifest)
-        asi06 = await run_asi06(manifest, session_factory, judge=judge, red_llm=red_llm)
+        asi06_task = asyncio.create_task(run_asi06(manifest, session_factory, judge=judge, red_llm=red_llm))
+        asi01_task = asyncio.create_task(run_asi01(manifest, session_factory, judge=judge, red_llm=red_llm))
+        asi09_task = asyncio.create_task(run_asi09(manifest, session_factory, judge=judge))
+
+        asi06, asi01, asi09 = await asyncio.gather(asi06_task, asi01_task, asi09_task)
         result.asi06_detail = asi06
+        result.live_results = {"ASI01": asi01, "ASI09": asi09}
 
-        # ---- Step 3: stub the other 9 categories ----
-        stubs: list[StubScore] = stub_scores_for(manifest)
+        # ---- Step 3: stub the remaining 7 categories ----
+        live_categories = {"ASI01", "ASI06", "ASI09"}
+        stubs: list[StubScore] = [s for s in stub_scores_for(manifest) if s.category not in live_categories]
 
-        # Merge into a unified ASI score list, sorted by category id.
-        scores: list[CategoryScore] = [
-            CategoryScore(
-                category="ASI06",
-                score=asi06.score,
-                is_real=True,
-                details=asi06.to_dict(),
-            ),
-            *[
-                CategoryScore(
-                    category=s.category,
-                    score=s.score,
-                    is_real=False,
-                    details={"rationale": s.rationale},
-                )
-                for s in stubs
-            ],
+        live_scores: list[CategoryScore] = [
+            CategoryScore(category="ASI01", score=asi01.score, is_real=True, details=asi01.to_dict()),
+            CategoryScore(category="ASI06", score=asi06.score, is_real=True, details=asi06.to_dict()),
+            CategoryScore(category="ASI09", score=asi09.score, is_real=True, details=asi09.to_dict()),
         ]
-        scores.sort(key=lambda c: c.category)
+        stub_scores_list: list[CategoryScore] = [
+            CategoryScore(category=s.category, score=s.score, is_real=False, details={"rationale": s.rationale})
+            for s in stubs
+        ]
+        scores = sorted(live_scores + stub_scores_list, key=lambda c: c.category)
         result.asi_scores = scores
 
         # ---- Step 4: Z3 verification ----

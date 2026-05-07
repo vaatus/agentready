@@ -64,7 +64,10 @@ class SubstituteSession:
                 # Route the substitute agent's responses through the HF Inference Provider too.
                 self._llm = _BaseLLMClient(s.hf_inference_url, s.hf_judge_model, s.hf_token)
             else:
-                self._llm = _BaseLLMClient(s.judge_llm_url, s.judge_llm_model, s.judge_llm_api_key)
+                # Substitute uses the smaller Red endpoint, NOT the heavy Judge — the
+                # substitute is impersonating the target agent (which is small and fast),
+                # while the separate Judge LLM sees the transcript and scores it.
+                self._llm = _BaseLLMClient(s.red_llm_url, s.red_llm_model, s.red_llm_api_key)
 
     @property
     def _system_prompt(self) -> str:

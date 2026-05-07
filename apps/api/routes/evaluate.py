@@ -87,17 +87,28 @@ async def evaluate(req: EvaluateRequest, session: AsyncSession = Depends(get_ses
             )
 
     # Per-category ASI scores.
+    asi06 = result.asi06_detail
     for cat in result.asi_scores:
-        asi06 = result.asi06_detail
-        is_asi06 = cat.category == "ASI06"
+        failed_serial: list = []
+        passed_serial: list = []
+        worst_serial = None
+        if cat.category == "ASI06" and asi06 is not None:
+            failed_serial = [a.__dict__ for a in asi06.failed_attacks]
+            passed_serial = [a.__dict__ for a in asi06.passed_attacks]
+            worst_serial = asi06.worst_failure.__dict__ if asi06.worst_failure else None
+        elif cat.category in result.live_results:
+            live = result.live_results[cat.category]
+            failed_serial = [a.to_dict() for a in live.failed]
+            passed_serial = [a.to_dict() for a in live.passed]
+            worst_serial = live.worst.to_dict() if live.worst else None
         score_row = AsiScore(
             scan_run_id=result.scan_id,
             category=cat.category,
             score=cat.score,
             is_real=cat.is_real,
-            failed_attacks=[a.__dict__ for a in asi06.failed_attacks] if (is_asi06 and asi06) else [],
-            passed_attacks=[a.__dict__ for a in asi06.passed_attacks] if (is_asi06 and asi06) else [],
-            worst_failure=asi06.worst_failure.__dict__ if (is_asi06 and asi06 and asi06.worst_failure) else None,
+            failed_attacks=failed_serial,
+            passed_attacks=passed_serial,
+            worst_failure=worst_serial,
         )
         session.add(score_row)
 
