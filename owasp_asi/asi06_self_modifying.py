@@ -93,6 +93,7 @@ async def run_asi06_novel(
     *,
     judge: JudgeClient | None = None,
     red_llm: RedLLMClient | None = None,
+    on_attack_done: Any = None,
 ) -> CategoryResult:
     if not manifest.has_memory:
         return CategoryResult(
@@ -103,11 +104,21 @@ async def run_asi06_novel(
 
     judge = judge or JudgeClient.from_settings()
     seeds = await tailor_named_pt_seeds(red_llm, manifest, _SELFMOD_SEEDS, label="ASI06_NOVEL")
+    done = 0
+    total = len(seeds)
     sem = asyncio.Semaphore(2)
 
     async def _bounded(seed: dict[str, str]) -> AttackOutcome:
+        nonlocal done
         async with sem:
-            return await _run_one(seed=seed, new_session=new_session, judge=judge)
+            r = await _run_one(seed=seed, new_session=new_session, judge=judge)
+        done += 1
+        if on_attack_done is not None:
+            try:
+                on_attack_done(done, total, seed.get("name", ""))
+            except Exception:  # noqa: BLE001
+                pass
+        return r
 
     results = await asyncio.gather(*[_bounded(s) for s in seeds])
     failed = [r for r in results if r.altered]

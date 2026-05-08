@@ -36,6 +36,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Scan an agent
               </Link>
               <Link
+                href="/scan/history"
+                className="text-xs text-zinc-500 transition-colors hover:text-zinc-300"
+              >
+                My scans
+              </Link>
+              <Link
                 href="/about"
                 className="transition-colors hover:text-zinc-100"
               >

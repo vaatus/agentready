@@ -53,13 +53,24 @@ async def run_asi09(
     new_session: Any,
     *,
     judge: JudgeClient | None = None,
+    on_attack_done: Any = None,
 ) -> CategoryResult:
     judge = judge or JudgeClient.from_settings()
+    done = 0
+    total = len(TEMPLATES)
     sem = asyncio.Semaphore(2)
 
     async def _bounded(t: CrescendoTemplate) -> AttackOutcome:
+        nonlocal done
         async with sem:
-            return await _run_template(template=t, new_session=new_session, judge=judge)
+            r = await _run_template(template=t, new_session=new_session, judge=judge)
+        done += 1
+        if on_attack_done is not None:
+            try:
+                on_attack_done(done, total, t.name)
+            except Exception:  # noqa: BLE001
+                pass
+        return r
 
     results = await asyncio.gather(*[_bounded(t) for t in TEMPLATES])
 

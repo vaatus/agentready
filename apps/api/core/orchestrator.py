@@ -108,22 +108,51 @@ async def run_scan(
         result.agent_slug = manifest.slug
         result.repo_sha = manifest.repo_sha
         result.manifest = manifest
-        _set_progress(scan_id, "ingest_done", slug=manifest.slug, framework=manifest.framework, tools=len(manifest.declared_tools))
+        _set_progress(
+            scan_id,
+            "ingest_done",
+            slug=manifest.slug,
+            framework=manifest.framework,
+            tools=len(manifest.declared_tools),
+        )
 
         # Run categories sequentially — bounding KV-cache pressure on the shared 7B.
         session_factory = make_session_factory(manifest)
-        _set_progress(scan_id, "asi06")
-        asi06 = await run_asi06(manifest, session_factory, judge=judge, red_llm=red_llm)
-        _set_progress(scan_id, "asi01")
-        asi01 = await run_asi01(manifest, session_factory, judge=judge, red_llm=red_llm)
-        _set_progress(scan_id, "asi02")
-        asi02 = await run_asi02(manifest, session_factory, judge=judge, red_llm=red_llm)
-        _set_progress(scan_id, "asi05")
-        asi05 = await run_asi05(manifest, session_factory, judge=judge, red_llm=red_llm)
-        _set_progress(scan_id, "asi09")
-        asi09 = await run_asi09(manifest, session_factory, judge=judge)
-        _set_progress(scan_id, "asi06_novel")
-        asi06_novel = await run_asi06_novel(manifest, session_factory, judge=judge)
+
+        def _make_reporter(step: str):
+            def _report(done: int, total: int, latest_name: str) -> None:
+                _set_progress(
+                    scan_id,
+                    step,
+                    attacks_done=done,
+                    attacks_total=total,
+                    latest=latest_name,
+                )
+
+            return _report
+
+        _set_progress(scan_id, "asi06", attacks_done=0, attacks_total=10)
+        asi06 = await run_asi06(
+            manifest, session_factory, judge=judge, red_llm=red_llm, on_attack_done=_make_reporter("asi06")
+        )
+        _set_progress(scan_id, "asi01", attacks_done=0, attacks_total=5)
+        asi01 = await run_asi01(
+            manifest, session_factory, judge=judge, red_llm=red_llm, on_attack_done=_make_reporter("asi01")
+        )
+        _set_progress(scan_id, "asi02", attacks_done=0, attacks_total=5)
+        asi02 = await run_asi02(
+            manifest, session_factory, judge=judge, red_llm=red_llm, on_attack_done=_make_reporter("asi02")
+        )
+        _set_progress(scan_id, "asi05", attacks_done=0, attacks_total=5)
+        asi05 = await run_asi05(
+            manifest, session_factory, judge=judge, red_llm=red_llm, on_attack_done=_make_reporter("asi05")
+        )
+        _set_progress(scan_id, "asi09", attacks_done=0, attacks_total=3)
+        asi09 = await run_asi09(manifest, session_factory, judge=judge, on_attack_done=_make_reporter("asi09"))
+        _set_progress(scan_id, "asi06_novel", attacks_done=0, attacks_total=3)
+        asi06_novel = await run_asi06_novel(
+            manifest, session_factory, judge=judge, red_llm=red_llm, on_attack_done=_make_reporter("asi06_novel")
+        )
         result.asi06_detail = asi06
         result.live_results = {
             "ASI01": asi01,

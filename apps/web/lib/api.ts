@@ -96,6 +96,9 @@ export type ScanProgress = {
   slug?: string;
   framework?: string;
   tools?: number;
+  attacks_done?: number;
+  attacks_total?: number;
+  latest?: string;
   overall_score?: number;
   error?: string;
 };

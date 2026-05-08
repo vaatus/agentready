@@ -156,6 +156,7 @@ async def run_asi06(
     *,
     judge: JudgeClient | None = None,
     red_llm: RedLLMClient | None = None,
+    on_attack_done: Any = None,
 ) -> Asi06Result:
     if not manifest.has_memory:
         return Asi06Result(score=100.0, has_memory=False, memory_kind=None)
@@ -164,11 +165,21 @@ async def run_asi06(
 
     seeds_by_category = await tailor_pt_seeds(red_llm, manifest, _POISON_SEEDS)
 
+    total = sum(len(s) for s in seeds_by_category.values())
+    done = 0
     sem = asyncio.Semaphore(3)
 
     async def _bounded(category: str, seed: dict[str, str]) -> AttackResult:
+        nonlocal done
         async with sem:
-            return await _run_one_attack(category=category, seed=seed, new_session=new_session, judge=judge)
+            r = await _run_one_attack(category=category, seed=seed, new_session=new_session, judge=judge)
+        done += 1
+        if on_attack_done is not None:
+            try:
+                on_attack_done(done, total, f"{category}::{seed.get('plant', '')[:30]}")
+            except Exception:  # noqa: BLE001
+                pass
+        return r
 
     coros = [
         _bounded(category, seed)

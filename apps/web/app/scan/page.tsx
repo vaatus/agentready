@@ -1,9 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 import { getScanStatus, startScan, type ScanProgress } from "@/lib/api";
+import { loadMyScans, upsertMyScan } from "@/lib/myScans";
 
 const STEPS: { key: string; label: string; sub: string }[] = [
   { key: "ingest", label: "Ingest", sub: "Cloning the repo, detecting framework, extracting tools + system prompt." },
@@ -20,18 +21,53 @@ const STEPS: { key: string; label: string; sub: string }[] = [
 const STEP_INDEX = new Map(STEPS.map((s, i) => [s.key, i] as const));
 
 export default function ScanPage() {
+  return (
+    <Suspense fallback={null}>
+      <ScanInner />
+    </Suspense>
+  );
+}
+
+function ScanInner() {
   const router = useRouter();
+  const params = useSearchParams();
+  const initialId = params?.get("id") ?? null;
+
   const [url, setUrl] = useState("");
   const [phase, setPhase] = useState<"idle" | "starting" | "running" | "done" | "failed">("idle");
   const [progress, setProgress] = useState<ScanProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [stepStartedAt, setStepStartedAt] = useState<number | null>(null);
+  const [, setNow] = useState(() => Date.now());
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Keep an elapsed-time ticker so the UI feels live even when the step name
+  // hasn't changed yet.
+  useEffect(() => {
+    if (phase !== "running") return;
+    tickRef.current = setInterval(() => setNow(Date.now()), 1000);
+    return () => {
+      if (tickRef.current) clearInterval(tickRef.current);
+    };
+  }, [phase]);
 
   useEffect(() => {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
+      if (tickRef.current) clearInterval(tickRef.current);
     };
   }, []);
+
+  // Auto-resume polling when the URL has ?id=...
+  useEffect(() => {
+    if (!initialId) return;
+    const saved = loadMyScans().find((s) => s.scan_id === initialId);
+    if (saved?.github_url) setUrl(saved.github_url);
+    setPhase("running");
+    beginPolling(initialId, saved?.github_url ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialId]);
 
   function clearPoll() {
     if (pollRef.current) {
@@ -40,9 +76,66 @@ export default function ScanPage() {
     }
   }
 
+  function beginPolling(scanId: string, githubUrlForLog: string) {
+    let lastStep = "";
+    setStepStartedAt(Date.now());
+    pollRef.current = setInterval(async () => {
+      try {
+        const s = await getScanStatus(scanId);
+        setProgress(s);
+        if (s.step !== lastStep) {
+          lastStep = s.step;
+          setStepStartedAt(Date.now());
+        }
+        if (s.step === "completed") {
+          clearPoll();
+          setPhase("done");
+          upsertMyScan({
+            scan_id: scanId,
+            github_url: githubUrlForLog,
+            started_at: new Date().toISOString(),
+            status: "completed",
+            slug: s.slug ?? null,
+            overall_score: s.overall_score ?? null,
+            finished_at: new Date().toISOString(),
+          });
+          setTimeout(() => {
+            if (s.slug) router.push(`/agent/${s.slug}`);
+          }, 1500);
+        } else if (s.step === "failed") {
+          clearPoll();
+          setPhase("failed");
+          setError(s.error ?? "scan failed");
+          upsertMyScan({
+            scan_id: scanId,
+            github_url: githubUrlForLog,
+            started_at: new Date().toISOString(),
+            status: "failed",
+            finished_at: new Date().toISOString(),
+          });
+        } else {
+          // Persist running state too so refresh picks up.
+          upsertMyScan({
+            scan_id: scanId,
+            github_url: githubUrlForLog,
+            started_at: new Date().toISOString(),
+            status: "running",
+          });
+        }
+      } catch (e) {
+        if (!(e instanceof Error && e.message.includes("404"))) {
+          clearPoll();
+          setPhase("failed");
+          setError(e instanceof Error ? e.message : String(e));
+        }
+      }
+    }, 2000);
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setProgress(null);
     if (!/^https?:\/\/(www\.)?github\.com\/[^/]+\/[^/]+/i.test(url.trim())) {
       setError("Please paste a github.com repo URL (e.g. https://github.com/owner/name).");
       return;
@@ -51,35 +144,18 @@ export default function ScanPage() {
     try {
       const r = await startScan(url.trim());
       setPhase("running");
-      let lastStep = "";
-      pollRef.current = setInterval(async () => {
-        try {
-          const s = await getScanStatus(r.scan_id);
-          setProgress(s);
-          if (s.step !== lastStep) {
-            lastStep = s.step;
-          }
-          if (s.step === "completed") {
-            clearPoll();
-            setPhase("done");
-            // Redirect to the agent page after a brief beat so the user sees the success state.
-            setTimeout(() => {
-              if (s.slug) router.push(`/agent/${s.slug}`);
-            }, 1200);
-          } else if (s.step === "failed") {
-            clearPoll();
-            setPhase("failed");
-            setError(s.error ?? "scan failed");
-          }
-        } catch (e) {
-          // 404 is expected briefly during the first poll if backend hasn't queued yet.
-          if (!(e instanceof Error && e.message.includes("404"))) {
-            clearPoll();
-            setPhase("failed");
-            setError(e instanceof Error ? e.message : String(e));
-          }
-        }
-      }, 2000);
+      // Pin scan_id to the URL so refresh / share / bookmark works.
+      const params = new URLSearchParams(window.location.search);
+      params.set("id", r.scan_id);
+      window.history.replaceState(null, "", `?${params.toString()}`);
+
+      upsertMyScan({
+        scan_id: r.scan_id,
+        github_url: url.trim(),
+        started_at: new Date().toISOString(),
+        status: "running",
+      });
+      beginPolling(r.scan_id, url.trim());
     } catch (e) {
       setPhase("failed");
       setError(e instanceof Error ? e.message : String(e));
@@ -87,25 +163,41 @@ export default function ScanPage() {
   }
 
   const currentIdx = progress ? (STEP_INDEX.get(progress.step) ?? -1) : -1;
+  const elapsedSec = stepStartedAt ? Math.floor((Date.now() - stepStartedAt) / 1000) : 0;
+  const attackProgress =
+    progress?.attacks_total && progress.attacks_done != null
+      ? `${progress.attacks_done} / ${progress.attacks_total}`
+      : null;
+  const attackPct =
+    progress?.attacks_total && progress.attacks_done != null
+      ? Math.min(100, (progress.attacks_done / progress.attacks_total) * 100)
+      : null;
 
   return (
     <div className="space-y-10">
-      <header>
-        <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-          Scan a new agent
+      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+            Scan a new agent
+          </div>
+          <h1 className="mt-1 text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+            Paste a GitHub URL.{" "}
+            <span className="bg-gradient-to-r from-amd via-red-400 to-orange-300 bg-clip-text text-transparent">
+              Get the full report.
+            </span>
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm text-zinc-400">
+            Same pipeline as the famous-agent leaderboard. Typical scan time: 4–7 minutes. Each
+            attack runs against a substitute on AMD MI300X — your results auto-save and survive
+            page refreshes.
+          </p>
         </div>
-        <h1 className="mt-1 text-4xl font-bold leading-tight tracking-tight md:text-5xl">
-          Paste a GitHub URL.{" "}
-          <span className="bg-gradient-to-r from-amd via-red-400 to-orange-300 bg-clip-text text-transparent">
-            Get the full report.
-          </span>
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm text-zinc-400">
-          Same pipeline as the famous-agent leaderboard. We clone the repo, extract its tools and
-          system prompt, run the OWASP ASI-2026 attack suite (5 live categories) against a substitute
-          on AMD MI300X, formally verify with Z3, and produce the per-agent report. Typical scan
-          time: 4–7 minutes.
-        </p>
+        <a
+          href="/scan/history"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-zinc-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-300 transition-colors hover:border-amd hover:text-amd"
+        >
+          My scans →
+        </a>
       </header>
 
       <form onSubmit={onSubmit} className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
@@ -162,7 +254,7 @@ export default function ScanPage() {
 
       {phase !== "idle" ? (
         <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between gap-2">
             <div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
                 Scan progress
@@ -176,6 +268,11 @@ export default function ScanPage() {
                       ? `Detected: ${progress.framework} agent · ${progress.tools} tools declared`
                       : "Running attacks against the substitute on AMD MI300X…"}
               </h2>
+              {phase === "running" && progress?.latest ? (
+                <div className="mt-1 font-mono text-xs text-zinc-500">
+                  current: {progress.latest}
+                </div>
+              ) : null}
             </div>
             {progress?.scan_id ? (
               <span className="font-mono text-[10px] text-zinc-600">
@@ -196,6 +293,9 @@ export default function ScanPage() {
                       : currentIdx === i
                         ? "active"
                         : "pending";
+              const showAttackBar =
+                status === "active" && i >= 1 && i <= 6 && attackProgress !== null;
+              const showElapsed = status === "active" && elapsedSec > 0;
               return (
                 <li
                   key={s.key}
@@ -223,8 +323,28 @@ export default function ScanPage() {
                     {status === "done" ? "✓" : status === "failed" ? "!" : i + 1}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-zinc-200">{s.label}</div>
+                    <div className="flex flex-wrap items-baseline gap-2">
+                      <div className="text-sm font-semibold text-zinc-200">{s.label}</div>
+                      {showAttackBar ? (
+                        <span className="font-mono text-[10px] text-amd">
+                          {attackProgress} attacks
+                        </span>
+                      ) : null}
+                      {showElapsed ? (
+                        <span className="font-mono text-[10px] text-zinc-500">
+                          {elapsedSec}s elapsed
+                        </span>
+                      ) : null}
+                    </div>
                     <div className="text-xs text-zinc-500">{s.sub}</div>
+                    {showAttackBar && attackPct !== null ? (
+                      <div className="mt-2 h-1 overflow-hidden rounded-full bg-zinc-800">
+                        <div
+                          className="h-full bg-amd transition-all duration-500"
+                          style={{ width: `${attackPct}%` }}
+                        />
+                      </div>
+                    ) : null}
                   </div>
                   {status === "active" ? (
                     <span className="mt-1 inline-block h-2 w-2 animate-pulse rounded-full bg-amd" />
