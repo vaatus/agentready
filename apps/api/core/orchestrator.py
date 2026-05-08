@@ -49,14 +49,6 @@ class ScanResult:
     chaos_surface: ReliabilitySurface | None = None
     error: str | None = None
 
-
-# In-memory progress for live-streamed scans. Best-effort, lost on restart.
-SCAN_PROGRESS: dict[str, dict] = {}
-
-
-def _set_progress(scan_id: str, step: str, **extra) -> None:
-    SCAN_PROGRESS[scan_id] = {"step": step, "updated_at": datetime.now(timezone.utc).isoformat(), **extra}
-
     @property
     def status(self) -> str:
         if self.error:
@@ -64,6 +56,14 @@ def _set_progress(scan_id: str, step: str, **extra) -> None:
         if self.completed_at is None:
             return "running"
         return "completed"
+
+
+# In-memory progress for live-streamed scans. Best-effort, lost on restart.
+SCAN_PROGRESS: dict[str, dict] = {}
+
+
+def _set_progress(scan_id: str, step: str, **extra) -> None:
+    SCAN_PROGRESS[scan_id] = {"step": step, "updated_at": datetime.now(timezone.utc).isoformat(), **extra}
 
 
 def _aggregate_overall(
@@ -92,8 +92,10 @@ async def run_scan(
     slug: str | None = None,
     judge: JudgeClient | None = None,
     red_llm: RedLLMClient | None = None,
+    scan_id: str | None = None,
 ) -> ScanResult:
-    scan_id = uuid.uuid4().hex
+    if scan_id is None:
+        scan_id = uuid.uuid4().hex
     started_at = datetime.now(timezone.utc)
     result = ScanResult(scan_id=scan_id, agent_slug=slug or "", repo_sha="", started_at=started_at)
 

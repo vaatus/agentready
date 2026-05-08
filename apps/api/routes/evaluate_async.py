@@ -57,14 +57,9 @@ async def scan_status(scan_id: str) -> dict:
 
 
 async def _run_and_persist(scan_id: str, github_url: str, slug: str | None) -> None:
-    """Runs run_scan() and persists to the DB once finished. The scan_id
-    we generate here is overwritten by run_scan's own scan_id; we map both."""
+    """Runs run_scan() with our client scan_id so progress updates flow to the same key."""
     try:
-        result = await run_scan(github_url, slug=slug)
-        # Bridge: keep both ids pointing at the same progress entry.
-        SCAN_PROGRESS[scan_id] = {**SCAN_PROGRESS.get(scan_id, {}), "scan_id_internal": result.scan_id, "slug": result.agent_slug}
-        if result.scan_id != scan_id:
-            SCAN_PROGRESS[result.scan_id] = SCAN_PROGRESS[scan_id]
+        result = await run_scan(github_url, slug=slug, scan_id=scan_id)
 
         async with SessionLocal() as session:
             agent_row = await session.get(Agent, result.agent_slug)
