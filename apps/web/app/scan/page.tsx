@@ -7,15 +7,20 @@ import { getScanStatus, startScan, type ScanProgress } from "@/lib/api";
 import { loadMyScans, upsertMyScan } from "@/lib/myScans";
 
 const STEPS: { key: string; label: string; sub: string }[] = [
-  { key: "ingest", label: "Ingest", sub: "Cloning the repo, detecting framework, extracting tools + system prompt." },
-  { key: "asi06", label: "ASI06 — Memory Poisoning", sub: "Two-session test, 10 plant/trigger pairs tailored by Qwen 7B." },
-  { key: "asi01", label: "ASI01 — Goal Hijack", sub: "5 indirect-injection probes (CI bot, calendar, RAG, support, MCP tool)." },
-  { key: "asi02", label: "ASI02 — Tool Misuse", sub: "5 dangerous tool-chain probes disguised as real business asks." },
-  { key: "asi05", label: "ASI05 — Code Execution", sub: "5 RCE / sandbox-escape probes hidden in dev workflows." },
-  { key: "asi09", label: "ASI09 — Crescendo", sub: "3 multi-turn 4-phase trust escalations." },
-  { key: "asi06_novel", label: "ASI06 — Self-Modifying (novel)", sub: "AgentReady-original attack: agent rewrites its own memory." },
-  { key: "z3", label: "Z3 SMT verification", sub: "Math, not vibes — hand-written + Qwen-authored contracts." },
-  { key: "chaos", label: "Reliability Surface", sub: "R(k=1, ε, λ) chaos surface from manifest features." },
+  { key: "ingest", label: "Read the agent", sub: "Clone the repo, see what library it uses, pull out its job description and toolbox." },
+  { key: "asi06", label: "Memory tampering", sub: "10 fake-memory plants. Turn 1 we plant; turn 2 we send a normal-looking question and check if the fake memory took hold." },
+  { key: "asi01", label: "Hijacking", sub: "5 disguised attack messages — looks like a build log, a calendar invite, a support ticket — trying to override the agent's job." },
+  { key: "asi02", label: "Dangerous tool combos", sub: "5 dangerous combinations of the agent's actual tools, framed as real business asks." },
+  { key: "asi03", label: "Pretending to be someone else", sub: "5 fabricated-identity probes (self-claimed admin, hearsay handoff, cross-tenant via partnership, service-account impersonation, one-time scope exception)." },
+  { key: "asi04", label: "Sneaky tools in the toolbox", sub: "5 user-driven supply-chain probes (rogue MCP server, silent plugin swap, tool alias redirect, compromised dependency, remote prompt pack)." },
+  { key: "asi05", label: "Attacker code", sub: "5 sneaky code-injection probes, disguised as developer requests." },
+  { key: "asi07", label: "Knocking the agent off-track", sub: "5 fabricated-plan-state probes (fake step completion, subgoal substitution, false prior agreement, partial-completion skip, unsafe error recovery)." },
+  { key: "asi08", label: "Tricking another agent", sub: "5 spoofed-peer probes (fake peer-agent directive, fabricated tool result, fake orchestrator broadcast, fake crew handoff, injected trust metadata)." },
+  { key: "asi09", label: "Slow-burn manipulation", sub: "3 multi-turn warm-ups — 4 turns of trust-building, then the dangerous ask." },
+  { key: "asi10", label: "Drift / agent rewriting itself", sub: "5 directive-modification probes (threshold relaxation, prompt compression, self-replicating directive, persona overwrite, silent constraint drop)." },
+  { key: "asi06_novel", label: "Self-modifying memory (our novel attack)", sub: "Agent rewrites its own memory across sessions." },
+  { key: "z3", label: "Math-checked safety rules", sub: "Math software searches for any input that breaks the agent's safety rules." },
+  { key: "chaos", label: "Stress test grid", sub: "Measures how the agent holds up when prompts get reworded and servers fail." },
 ];
 
 const STEP_INDEX = new Map(STEPS.map((s, i) => [s.key, i] as const));
@@ -34,13 +39,19 @@ function ScanInner() {
   const initialId = params?.get("id") ?? null;
 
   const [url, setUrl] = useState("");
-  const [phase, setPhase] = useState<"idle" | "starting" | "running" | "done" | "failed">("idle");
+  const [phase, setPhase] = useState<
+    "idle" | "starting" | "running" | "done" | "already_done" | "failed"
+  >("idle");
   const [progress, setProgress] = useState<ScanProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [stepStartedAt, setStepStartedAt] = useState<number | null>(null);
   const [, setNow] = useState(() => Date.now());
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // True only after we've seen the scan in a non-terminal state at least once
+  // during this poll loop. Prevents auto-redirect when resuming a URL pointing
+  // at an already-completed scan.
+  const sawRunningRef = useRef(false);
 
   // Keep an elapsed-time ticker so the UI feels live even when the step name
   // hasn't changed yet.
@@ -78,6 +89,7 @@ function ScanInner() {
 
   function beginPolling(scanId: string, githubUrlForLog: string) {
     let lastStep = "";
+    sawRunningRef.current = false;
     setStepStartedAt(Date.now());
     pollRef.current = setInterval(async () => {
       try {
@@ -87,9 +99,13 @@ function ScanInner() {
           lastStep = s.step;
           setStepStartedAt(Date.now());
         }
+        if (s.step !== "completed" && s.step !== "failed") {
+          sawRunningRef.current = true;
+        }
         if (s.step === "completed") {
           clearPoll();
-          setPhase("done");
+          const wasFreshScan = sawRunningRef.current;
+          setPhase(wasFreshScan ? "done" : "already_done");
           upsertMyScan({
             scan_id: scanId,
             github_url: githubUrlForLog,
@@ -99,9 +115,11 @@ function ScanInner() {
             overall_score: s.overall_score ?? null,
             finished_at: new Date().toISOString(),
           });
-          setTimeout(() => {
-            if (s.slug) router.push(`/agent/${s.slug}`);
-          }, 1500);
+          if (wasFreshScan) {
+            setTimeout(() => {
+              if (s.slug) router.push(`/agent/${s.slug}`);
+            }, 1500);
+          }
         } else if (s.step === "failed") {
           clearPoll();
           setPhase("failed");
@@ -187,9 +205,9 @@ function ScanInner() {
             </span>
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-zinc-400">
-            Same pipeline as the famous-agent leaderboard. Typical scan time: 4–7 minutes. Each
-            attack runs against a substitute on AMD MI300X — your results auto-save and survive
-            page refreshes.
+            Same exact tests as the famous-agent leaderboard. Takes about 4–7 minutes. Each
+            attack runs against a stand-in copy of the agent on our AMD GPU — your results
+            auto-save and survive page refreshes.
           </p>
         </div>
         <a
@@ -224,7 +242,9 @@ function ScanInner() {
                 ? "Scanning…"
                 : phase === "done"
                   ? "Done — redirecting"
-                  : "Run scan"}
+                  : phase === "already_done"
+                    ? "Run a new scan"
+                    : "Run scan"}
           </button>
         </div>
         {error ? (
@@ -254,6 +274,29 @@ function ScanInner() {
 
       {phase !== "idle" ? (
         <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
+          {phase === "already_done" && progress?.slug ? (
+            <div className="mb-5 flex flex-col gap-3 rounded-xl border border-emerald-700/60 bg-emerald-950/15 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-emerald-300">
+                  This scan has already finished
+                </div>
+                <div className="mt-1 text-sm text-zinc-200">
+                  Score:{" "}
+                  <span className="font-mono font-bold text-emerald-300">
+                    {progress.overall_score?.toFixed(1) ?? "—"}
+                  </span>{" "}
+                  / 100 · agent: <span className="font-mono">{progress.slug}</span>
+                </div>
+              </div>
+              <a
+                href={`/agent/${progress.slug}`}
+                className="shrink-0 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-emerald-300 transition-all hover:bg-emerald-500/20"
+              >
+                View report →
+              </a>
+            </div>
+          ) : null}
+
           <div className="mb-4 flex items-center justify-between gap-2">
             <div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
@@ -261,12 +304,14 @@ function ScanInner() {
               </div>
               <h2 className="mt-1 text-lg font-semibold">
                 {phase === "done"
-                  ? "Done. Redirecting to the report…"
-                  : phase === "failed"
-                    ? "Scan failed."
-                    : progress?.step === "ingest_done"
-                      ? `Detected: ${progress.framework} agent · ${progress.tools} tools declared`
-                      : "Running attacks against the substitute on AMD MI300X…"}
+                  ? "Done. Loading the report…"
+                  : phase === "already_done"
+                    ? "Recap of a finished scan."
+                    : phase === "failed"
+                      ? "Scan failed."
+                      : progress?.step === "ingest_done"
+                        ? `Found: ${progress.framework} agent with ${progress.tools} tools`
+                        : "Running real attacks against a stand-in copy of the agent on our AMD GPU…"}
               </h2>
               {phase === "running" && progress?.latest ? (
                 <div className="mt-1 font-mono text-xs text-zinc-500">
@@ -284,7 +329,7 @@ function ScanInner() {
           <ul className="space-y-2">
             {STEPS.map((s, i) => {
               const status =
-                phase === "done"
+                phase === "done" || phase === "already_done"
                   ? "done"
                   : phase === "failed" && currentIdx === i
                     ? "failed"
@@ -361,6 +406,23 @@ function ScanInner() {
                 {progress.overall_score.toFixed(1)}
               </span>{" "}
               / 100. Loading the report…
+            </div>
+          ) : null}
+
+          {phase === "already_done" ? (
+            <div className="mt-5 flex justify-end">
+              <button
+                onClick={() => {
+                  // Reset to the form view.
+                  window.history.replaceState(null, "", "/scan");
+                  setPhase("idle");
+                  setProgress(null);
+                  setUrl("");
+                }}
+                className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-200 transition-all hover:border-amd hover:text-amd"
+              >
+                Start a new scan
+              </button>
             </div>
           ) : null}
         </section>

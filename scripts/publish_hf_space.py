@@ -96,7 +96,8 @@ if __name__ == "__main__":
 '''
 
 
-_REQUIREMENTS = """gradio>=4.44.0
+_REQUIREMENTS = """gradio>=5.0.0
+huggingface_hub>=0.25,<1.0
 """
 
 
@@ -106,7 +107,8 @@ emoji: 🛡️
 colorFrom: red
 colorTo: gray
 sdk: gradio
-sdk_version: 4.44.0
+sdk_version: 5.49.0
+python_version: "3.11"
 app_file: app.py
 pinned: false
 license: mit

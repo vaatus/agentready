@@ -6,16 +6,16 @@ import type { AsiScore } from "@/lib/api";
 import { ASIExplainerModal } from "./ASIExplainerModal";
 
 const CATEGORY_NAMES: Record<string, string> = {
-  ASI01: "Goal Hijack",
-  ASI02: "Tool Misuse",
-  ASI03: "Identity Abuse",
-  ASI04: "Supply Chain",
-  ASI05: "Code Execution",
-  ASI06: "Memory Poisoning",
-  ASI07: "Planning Errors",
-  ASI08: "Inter-Agent",
-  ASI09: "Trust Exploitation",
-  ASI10: "Rogue Agents",
+  ASI01: "Hijacking the agent",
+  ASI02: "Combining safe tools, harmful outcome",
+  ASI03: "Pretending to be someone else",
+  ASI04: "Sneaky tools in the toolbox",
+  ASI05: "Running attacker code",
+  ASI06: "Planting fake memories",
+  ASI07: "Knocking the agent off-track",
+  ASI08: "Tricking another agent",
+  ASI09: "Slow-burn manipulation",
+  ASI10: "Drift over long runs",
 };
 
 function color(score: number) {
@@ -48,12 +48,18 @@ export function ASIScorecard({ scores }: { scores: AsiScore[] }) {
                     {s.category}
                   </div>
                   {s.is_real ? (
-                    <span className="rounded-full bg-amd/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-amd">
-                      live
+                    <span
+                      className="rounded-full bg-amd/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-amd"
+                      title="We ran real attacks against this agent"
+                    >
+                      tested
                     </span>
                   ) : (
-                    <span className="rounded-full bg-zinc-800 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-zinc-400">
-                      indicator
+                    <span
+                      className="rounded-full bg-zinc-800 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-zinc-400"
+                      title="Score estimated from the agent's blueprint, not from real attacks"
+                    >
+                      estimated
                     </span>
                   )}
                 </div>
@@ -77,14 +83,14 @@ export function ASIScorecard({ scores }: { scores: AsiScore[] }) {
                   <span className="font-mono text-amd">{s.failed_attacks_count}</span>
                   <span className="text-zinc-500">
                     {" "}
-                    / {s.failed_attacks_count + s.passed_attacks_count} attacks landed
+                    / {s.failed_attacks_count + s.passed_attacks_count} attacks worked
                   </span>
                 </span>
               ) : (
-                <span className="italic text-zinc-500">manifest-aware indicator</span>
+                <span className="italic text-zinc-500">estimated from blueprint</span>
               )}
               <span className="text-[10px] uppercase tracking-wider text-zinc-500 group-hover:text-amd">
-                explain →
+                see how we test →
               </span>
             </div>
           </button>

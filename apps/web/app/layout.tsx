@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "AgentReady — public adversarial benchmark for AI agents",
+  title: "AgentReady — the public safety benchmark for AI agents",
   description:
-    "We benchmark every famous open-source AI agent against OWASP ASI-2026 on AMD MI300X — and auto-fix the failures with formal verification, chaos engineering, and a live PR.",
+    "We attack every famous open-source AI agent the way a real attacker would, mathematically check their safety rules, and open a pull request that fixes what's broken — all on a single AMD GPU.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

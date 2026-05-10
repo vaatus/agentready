@@ -33,30 +33,33 @@ export default async function HomePage() {
               <span>{scored.length}</span>
               <span className="text-zinc-300"> famous open-source AI agents</span>
               <br className="hidden md:block" />
-              <span className="text-zinc-300"> fail </span>
+              <span className="text-zinc-300"> fail the </span>
               <span className="bg-gradient-to-r from-amd via-red-400 to-orange-300 bg-clip-text text-transparent">
-                OWASP ASI-2026
+                new safety standard
               </span>
               <span className="text-zinc-300">.</span>
             </h1>
           </>
         ) : (
           <h1 className="max-w-3xl text-4xl font-semibold leading-tight md:text-5xl">
-            The public adversarial benchmark for AI agents.
+            The public safety benchmark for AI agents.
           </h1>
         )}
         <p className="mt-6 max-w-2xl text-lg text-zinc-400">
-          AgentReady scans every famous open-source AI agent against OWASP&apos;s 2026 Top-10 for
-          Agentic Applications, runs chaos engineering against them, formally verifies their safety
-          contracts with Z3, and auto-opens a pull request to fix what&apos;s broken — all on a
-          single AMD MI300X.
+          We attack every famous open-source AI agent the way a real attacker would — disguised
+          messages, fake memories, slow-burn manipulation, fake server errors — then we
+          mathematically check their safety rules and open a pull request that fixes what&apos;s
+          broken. All on a single AMD GPU.{" "}
+          <span className="text-zinc-500">
+            (We follow the OWASP Top 10 for Agentic Applications 2026.)
+          </span>
         </p>
         {scored.length > 0 ? (
           <div className="mt-6 flex flex-wrap items-center gap-2">
-            <Stat label="agents scored" value={String(scored.length)} />
-            <Stat label="live ASI categories" value="5" />
-            <Stat label="Judge LLM" value="Qwen 2.5 72B AWQ" />
-            <Stat label="VRAM concurrent" value="~75 / 192 GB" highlight />
+            <Stat label="agents tested" value={String(scored.length)} />
+            <Stat label="real attack categories" value="10 / 10" />
+            <Stat label="grading model" value="Qwen 2.5 72B" />
+            <Stat label="GPU memory used" value="~75 / 192 GB" highlight />
             <a
               href="/scan"
               className="ml-auto inline-flex items-center gap-2 rounded-full border border-amd/40 bg-amd/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amd transition-colors hover:bg-amd/20"
@@ -88,15 +91,15 @@ export default async function HomePage() {
       <section className="grid gap-4 md:grid-cols-3">
         <Card
           title="What we test"
-          body="OWASP's brand-new Top-10 for Agentic Applications, published December 2025. Five categories run real attacks — Goal Hijack, Tool Misuse, Code Execution, Memory Poisoning, and Crescendo trust escalation. The other five are manifest-aware indicators."
+          body="The 10 ways an AI agent can be tricked, just published as a public safety standard (OWASP Top 10 for Agentic Applications 2026). We run real, reproducible attacks for all 10 — hijacking, dangerous tool combos, identity abuse, supply-chain plants, attacker code, fake memories, planning corruption, peer-agent spoofing, slow-burn manipulation, and self-rewriting drift. Roughly 46 attacks per scan, every one tailored to that specific agent."
         />
         <Card
-          title="How we score"
-          body="A 70B Judge LLM (Qwen 2.5 72B AWQ) reads each attempted attack and decides whether the agent was actually manipulated. Then a Z3 SMT solver tries to find a mathematical counterexample to the agent's declared safety contract. Math, not vibes."
+          title="How we grade"
+          body="A 72-billion-parameter judge model reads every attempted attack and decides whether the agent was actually manipulated. Then math software searches for any input that breaks the agent's declared safety rules. Math, not vibes."
         />
         <Card
           title="What you get"
-          body="Click any agent on the leaderboard. See exactly which attacks landed. Click 'Generate fix PR' — Qwen authors guard rules, re-runs the same attacks against the patched prompt to measure the improvement, and opens a real GitHub pull request with a signed compliance certificate."
+          body="Click any agent on the leaderboard. See exactly which attacks worked. Click 'Open auto-fix PR' — our model writes guard rules, re-runs the same attacks against the patched job description to prove the fix worked, and opens a real GitHub pull request with a signed safety certificate."
         />
       </section>
 
@@ -139,10 +142,10 @@ function Card({ title, body }: { title: string; body: string }) {
 
 function ConcentrationFinding({ agents }: { agents: LeaderboardEntry[] }) {
   const bands = [
-    { label: "≥ 80 · low", color: "bg-emerald-500", min: 80 },
-    { label: "70-79 · moderate", color: "bg-yellow-500", min: 70 },
-    { label: "60-69 · elevated", color: "bg-orange-500", min: 60 },
-    { label: "< 60 · high", color: "bg-red-500", min: 0 },
+    { label: "≥ 80 · low risk", color: "bg-emerald-500", min: 80 },
+    { label: "70–79 · moderate risk", color: "bg-yellow-500", min: 70 },
+    { label: "60–69 · elevated risk", color: "bg-orange-500", min: 60 },
+    { label: "< 60 · high risk", color: "bg-red-500", min: 0 },
   ];
   const counts = bands.map((b, i) => {
     const max = i === 0 ? 200 : bands[i - 1].min;
@@ -155,15 +158,15 @@ function ConcentrationFinding({ agents }: { agents: LeaderboardEntry[] }) {
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
       <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-        Concentration risk · finding
+        What we found
       </div>
       <h2 className="mt-1 text-2xl font-bold tracking-tight">
-        No famous AI agent reaches the low-risk band.
+        No famous AI agent lands in the low-risk band.
       </h2>
       <p className="mt-2 max-w-3xl text-sm text-zinc-400">
-        With five live ASI categories on the 72B Judge, every scored agent falls in the
-        moderate-to-elevated risk window. The dominant failure modes: memory poisoning (ASI06) and
-        Crescendo trust exploitation (ASI09).
+        Across all 10 attack categories we run for real, every scored agent falls between
+        moderate and elevated risk. The two biggest weak spots: getting tricked by fake memories
+        and getting worn down by slow-burn manipulation over multiple turns.
       </p>
       <div className="mt-5 space-y-2.5">
         {bands.map((b, i) => (

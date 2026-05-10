@@ -33,9 +33,9 @@ export function LeaderboardTable({ rows }: { rows: LeaderboardEntry[] }) {
           <tr>
             <th className="px-4 py-3 w-12">#</th>
             <th className="px-4 py-3">Agent</th>
-            <th className="px-4 py-3">Framework</th>
-            <th className="px-4 py-3 text-right">OWASP ASI-2026</th>
-            <th className="px-4 py-3">Last scanned</th>
+            <th className="px-4 py-3">Built on</th>
+            <th className="px-4 py-3 text-right">Safety score / 100</th>
+            <th className="px-4 py-3">Last tested</th>
             <th className="px-4 py-3"></th>
           </tr>
         </thead>

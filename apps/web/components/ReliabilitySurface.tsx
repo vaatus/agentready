@@ -72,12 +72,13 @@ export function ReliabilitySurface({
             key={`hdr-${lam}`}
             className="flex items-center justify-center pb-1 font-mono text-[11px] text-zinc-500"
           >
-            <span>λ = {lam.toFixed(1)}</span>
+            <span>{Math.round(lam * 100)}% fake errors</span>
             {i === 0 ? (
-              <InfoTooltip label="lambda">
-                λ (lambda) = fault injection rate. λ = 0.3 means 30% of LLM calls during the run
-                return a simulated 429 / rate-limit error. Tests the agent&apos;s resilience to
-                upstream failures.
+              <InfoTooltip label="fake errors">
+                How often we inject a fake &ldquo;rate-limit, try again&rdquo; error into the
+                agent&apos;s LLM calls during the run. 30% means 3 out of every 10 calls fail.
+                Tests how the agent copes when its upstream is flaky.{" "}
+                <span className="text-zinc-500">(In the paper this is called λ — lambda.)</span>
               </InfoTooltip>
             ) : null}
           </div>
@@ -85,12 +86,14 @@ export function ReliabilitySurface({
         {epsilons.map((eps, idx) => (
           <Fragment key={`row-${eps}`}>
             <div className="flex items-center justify-end pr-2 font-mono text-[11px] text-zinc-500">
-              <span>ε = {eps.toFixed(1)}</span>
+              <span>{Math.round(eps * 100)}% reworded</span>
               {idx === 0 ? (
-                <InfoTooltip label="epsilon">
-                  ε (epsilon) = input perturbation rate. ε = 0.2 means 20% of input prompts get
-                  semantically-equivalent rephrasings. Tests whether the agent gives consistent
-                  answers to the same task asked different ways.
+                <InfoTooltip label="reworded prompts">
+                  How often we reword the question with the same meaning. 20% means 2 out of
+                  every 10 prompts get a same-meaning rewrite (e.g. &ldquo;what&apos;s 2+2&rdquo;
+                  → &ldquo;compute 2 plus 2&rdquo;). Tests whether the agent gives consistent
+                  answers when asked the same thing different ways.{" "}
+                  <span className="text-zinc-500">(In the paper this is called ε — epsilon.)</span>
                 </InfoTooltip>
               ) : null}
             </div>
@@ -106,13 +109,16 @@ export function ReliabilitySurface({
                   className={`relative m-0.5 flex h-14 items-center justify-center rounded-md transition-all duration-500 ${color(p)} ${
                     live ? "ring-2 ring-amd shadow-lg shadow-amd/20" : ""
                   } ${updated ? "scale-105 brightness-125" : ""}`}
-                  title={`pass@1 = ${p.toFixed(2)} (n=${c?.n_trials ?? 0}, ${live ? "live" : "computed"})`}
+                  title={`success rate = ${p.toFixed(2)} across ${c?.n_trials ?? 0} runs (${live ? "real attack" : "estimated"})`}
                 >
                   <span className="font-mono text-base font-bold tabular-nums text-white drop-shadow">
                     {p.toFixed(2)}
                   </span>
                   {live ? (
-                    <span className="absolute right-1 top-1 rounded bg-amd px-1 py-0.5 font-mono text-[8px] uppercase tracking-wider text-white">
+                    <span
+                      className="absolute right-1 top-1 rounded bg-amd px-1 py-0.5 font-mono text-[8px] uppercase tracking-wider text-white"
+                      title="Real run on the AMD GPU just now"
+                    >
                       live
                     </span>
                   ) : null}
@@ -124,7 +130,8 @@ export function ReliabilitySurface({
       </div>
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="text-[10px] text-zinc-500">
-          Pass@1 across input perturbation rate ε and fault injection rate λ. From{" "}
+          Each square = the agent&apos;s success rate on a normal task, measured under two kinds
+          of stress: rewording the question and injecting fake server errors. Method from{" "}
           <a
             href="https://arxiv.org/abs/2601.06112"
             className="text-zinc-400 underline hover:text-zinc-200"
@@ -143,10 +150,10 @@ export function ReliabilitySurface({
           {running ? (
             <>
               <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amd" />
-              Running on MI300X…
+              Running on the AMD GPU…
             </>
           ) : (
-            <>▶ Run live chaos (rate-limit, ε=0)</>
+            <>▶ Run a real failure test on this agent</>
           )}
         </button>
       </div>
