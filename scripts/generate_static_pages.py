@@ -271,27 +271,29 @@ def render_asi_card(score_row: sqlite3.Row, idx: int) -> str:
 
     failed_attacks = json.loads(score_row["failed_attacks"] or "[]")
     passed_attacks = json.loads(score_row["passed_attacks"] or "[]")
-
-    # ASI06 stores nested {"poison":..., "self_modifying":...} sometimes — flatten if so
-    if cat == "ASI06" and isinstance(failed_attacks, dict):
+    if not isinstance(failed_attacks, list):
         failed_attacks = []
+    if not isinstance(passed_attacks, list):
         passed_attacks = []
 
-    pill = (
-        '<span class="rounded-full bg-amd/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-amd">tested</span>'
-        if is_real
-        else '<span class="rounded-full bg-zinc-800 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-zinc-400">estimated</span>'
-    )
-
     landed_total = len(failed_attacks) + len(passed_attacks)
-    if is_real and landed_total > 0:
+    no_records = is_real and landed_total == 0
+
+    if no_records:
+        pill = '<span class="rounded-full bg-zinc-800 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-zinc-300" title="Tested in this scan but no attack outcomes were recorded — likely a substitute-side timeout during the two-session memory test.">no run data</span>'
+    elif is_real:
+        pill = '<span class="rounded-full bg-amd/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-amd">tested</span>'
+    else:
+        pill = '<span class="rounded-full bg-zinc-800 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-zinc-400">estimated</span>'
+
+    if no_records:
+        attack_summary = '<span class="italic text-zinc-500">no attack records this scan</span>'
+    elif is_real:
         attack_summary = (
             f'<span class="text-zinc-400">'
             f'<span class="font-mono text-amd">{len(failed_attacks)}</span>'
             f'<span class="text-zinc-500"> / {landed_total} attacks worked</span></span>'
         )
-    elif is_real:
-        attack_summary = '<span class="text-zinc-500">no attack records</span>'
     else:
         attack_summary = '<span class="italic text-zinc-500">estimated from blueprint</span>'
 
@@ -308,8 +310,18 @@ def render_asi_card(score_row: sqlite3.Row, idx: int) -> str:
                 attack_lists += render_attack_block(a, landed=False)
         attack_lists += "</div>"
 
+    score_text = "—" if no_records else f"{score:.0f}"
+    bar_width = 0 if no_records else max(0, min(100, score))
+    body_when_empty = (
+        '<div class="mt-3 rounded-md border border-zinc-800 bg-zinc-900/30 p-3 text-xs text-zinc-400">'
+        'This category ran but produced no recorded attack outcomes. '
+        'Likely a substitute-side timeout during the two-session memory test on this specific agent. '
+        'The other 9 categories ran normally — those scores are real.'
+        '</div>'
+    ) if no_records else ""
+
     return f"""
-<details class="rounded-xl border {('border-amd/30' if is_real else 'border-zinc-800')} bg-zinc-950 transition-colors hover:border-amd/50">
+<details class="rounded-xl border {('border-amd/30' if is_real and not no_records else 'border-zinc-800')} bg-zinc-950 transition-colors hover:border-amd/50">
   <summary class="p-4">
     <div class="flex items-baseline justify-between gap-3">
       <div>
@@ -320,11 +332,11 @@ def render_asi_card(score_row: sqlite3.Row, idx: int) -> str:
         <div class="mt-0.5 text-base font-semibold">{name}</div>
       </div>
       <div class="text-right">
-        <div class="font-mono text-3xl tabular-nums">{score:.0f}</div>
+        <div class="font-mono text-3xl tabular-nums {('text-zinc-600' if no_records else '')}">{score_text}</div>
       </div>
     </div>
     <div class="h-2 overflow-hidden rounded-full bg-zinc-800/80 mt-3">
-      <div class="h-full bg-gradient-to-r {gradient} transition-all duration-500" style="width: {max(0, min(100, score))}%"></div>
+      <div class="h-full bg-gradient-to-r {gradient} transition-all duration-500" style="width: {bar_width}%"></div>
     </div>
     <div class="mt-2 flex items-center justify-between gap-2 text-xs">
       {attack_summary}
@@ -332,6 +344,7 @@ def render_asi_card(score_row: sqlite3.Row, idx: int) -> str:
     </div>
   </summary>
   <div class="border-t border-zinc-800 px-4 pb-4">
+    {body_when_empty}
     {attack_lists}
   </div>
 </details>

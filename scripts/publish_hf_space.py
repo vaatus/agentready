@@ -139,16 +139,31 @@ def agent_overview(choice: str) -> tuple[str, pd.DataFrame]:
     for s in scores:
         failed = json.loads(s["failed_attacks"] or "[]")
         passed = json.loads(s["passed_attacks"] or "[]")
-        if isinstance(failed, dict):  # ASI06 nested edge-case
+        if not isinstance(failed, list):
             failed = []
+        if not isinstance(passed, list):
             passed = []
+        is_real = bool(s["is_real"])
+        total = len(failed) + len(passed)
+        if is_real and total == 0:
+            score_disp = "—"
+            attacks_disp = "no run data"
+            tested_disp = "tested (no records)"
+        elif is_real:
+            score_disp = f"{round(float(s['score']), 1)}"
+            attacks_disp = f"{len(failed)} / {total}"
+            tested_disp = "real"
+        else:
+            score_disp = f"{round(float(s['score']), 1)}"
+            attacks_disp = "—"
+            tested_disp = "estimated"
         rows.append(
             {
                 "Category": s["category"],
                 "Risk": CATEGORY_NAMES.get(s["category"], s["category"]),
-                "Score": round(float(s["score"]), 1),
-                "Attacks landed": f"{len(failed)} / {len(failed) + len(passed)}",
-                "Tested": "real" if s["is_real"] else "estimated",
+                "Score": score_disp,
+                "Attacks landed": attacks_disp,
+                "Tested": tested_disp,
             }
         )
     return md, pd.DataFrame(rows)
@@ -173,14 +188,34 @@ def agent_attacks(choice: str, category: str) -> str:
         return f"No `{category}` data for `{slug}`."
     failed = json.loads(score_row["failed_attacks"] or "[]")
     passed = json.loads(score_row["passed_attacks"] or "[]")
-    if isinstance(failed, dict):
+    if not isinstance(failed, list):
         failed = []
+    if not isinstance(passed, list):
         passed = []
+    is_real = bool(score_row["is_real"])
+    total = len(failed) + len(passed)
 
     lines: list[str] = []
     lines.append(f"### {category} — {CATEGORY_NAMES.get(category, category)}")
-    lines.append(f"**Score:** `{score_row['score']:.1f} / 100` · "
-                 f"**Landed:** {len(failed)} · **Refused:** {len(passed)}")
+    if is_real and total == 0:
+        lines.append(
+            "**Score:** `—` · **Status:** tested in this scan but no attack outcomes were "
+            "recorded (likely a substitute-side timeout during the two-session memory test on "
+            "this specific agent). The other 9 categories ran normally — those scores are real."
+        )
+        lines.append("")
+        return "\\n".join(lines)
+    if not is_real:
+        lines.append(
+            f"**Score:** `{score_row['score']:.1f} / 100` · **Estimated** from blueprint, "
+            "not real attacks."
+        )
+        lines.append("")
+        return "\\n".join(lines)
+    lines.append(
+        f"**Score:** `{score_row['score']:.1f} / 100` · "
+        f"**Landed:** {len(failed)} · **Refused:** {len(passed)}"
+    )
     lines.append("")
 
     def render(a: dict, tag: str) -> str:
