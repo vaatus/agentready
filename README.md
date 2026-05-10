@@ -2,7 +2,7 @@
 
 > **The public adversarial benchmark for AI agents.** We scan every famous open-source AI agent against OWASP ASI-2026, name the failures, then auto-fix them with formal verification, chaos engineering, and a real GitHub PR. Powered by AMD MI300X.
 
-[![Live Demo](https://img.shields.io/badge/demo-134.199.203.147%3A3000-blue)](http://134.199.203.147:3000) [![HF Space](https://img.shields.io/badge/🤗-Judge%20Demo-yellow)](https://huggingface.co/spaces/vaatus/agentready-judge-demo) [![HF LoRA](https://img.shields.io/badge/🤗-Chaos%20LoRA-yellow)](https://huggingface.co/vaatus/agentready-chaos-remediation-lora-v0) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![AMD MI300X](https://img.shields.io/badge/Powered%20by-AMD%20MI300X-ED1C24)](https://www.amd.com/en/developer.html)
+[![Methodology](https://img.shields.io/badge/methodology-vaatus.github.io%2Fagentready-blue)](https://vaatus.github.io/agentready/methodology.html) [![HF Space](https://img.shields.io/badge/🤗-Judge%20Demo-yellow)](https://huggingface.co/spaces/vaatus/agentready-judge-demo) [![HF LoRA](https://img.shields.io/badge/🤗-Chaos%20LoRA-yellow)](https://huggingface.co/vaatus/agentready-chaos-remediation-lora-v0) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![AMD MI300X](https://img.shields.io/badge/Powered%20by-AMD%20MI300X-ED1C24)](https://www.amd.com/en/developer.html)
 
 AMD Developer Hackathon submission · [lablab.ai](https://lablab.ai/ai-hackathons/amd-developer) · May 2026
 
@@ -16,9 +16,9 @@ AMD Developer Hackathon submission · [lablab.ai](https://lablab.ai/ai-hackathon
 
 | What | Where |
 |---|---|
-| Public leaderboard | http://134.199.203.147:3000 |
-| API | http://134.199.203.147:8002 |
-| Methodology doc | [docs/OWASP_ASI_COMPLIANCE.md](docs/OWASP_ASI_COMPLIANCE.md) |
+| Methodology (long-form) | https://vaatus.github.io/agentready/methodology.html |
+| Project landing | https://vaatus.github.io/agentready/ |
+| Methodology doc (markdown) | [docs/OWASP_ASI_COMPLIANCE.md](docs/OWASP_ASI_COMPLIANCE.md) |
 | Judge LLM Space (HF) | https://huggingface.co/spaces/vaatus/agentready-judge-demo |
 | Chaos-remediation LoRA (HF) | https://huggingface.co/vaatus/agentready-chaos-remediation-lora-v0 |
 | Real auto-PR (BabyAGI) | https://github.com/vaatus/babyagi/pull/1 |
