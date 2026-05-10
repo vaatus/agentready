@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Leaderboard — AgentReady</title>
+<meta name="description" content="13 of 13 famous open-source AI agents fail the new safety standard." />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: { colors: { amd: { DEFAULT: '#ED1C24', dark: '#B5151B' } } } },
+};
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; background: radial-gradient(ellipse at top, rgba(237, 28, 36, 0.08) 0%, transparent 60%) #000; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+</style>
+</head>
+<body class="min-h-screen bg-black text-zinc-100 antialiased">
+
+<header class="sticky top-0 z-40 border-b border-zinc-900/80 bg-black/60 backdrop-blur-xl">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <a href="./index.html" class="flex items-center gap-3">
+      <span class="font-mono text-lg font-bold tracking-tight">Agent<span class="text-amd">Ready</span></span>
+      <span class="rounded-full border border-amd/30 bg-amd/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] text-amd">Public Benchmark</span>
+    </a>
+    <nav class="flex items-center gap-6 text-sm text-zinc-400">
+      <a href="./leaderboard.html" class="transition-colors hover:text-zinc-100">Leaderboard</a>
+      <a href="./methodology.html" class="transition-colors hover:text-zinc-100">Methodology</a>
+      <a href="https://github.com/vaatus/agentready" target="_blank" rel="noreferrer" class="transition-colors hover:text-zinc-100">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main class="mx-auto max-w-6xl px-6 py-10 space-y-10">
+  <section>
+    <div class="mb-4 flex items-center gap-2">
+      <span class="inline-block h-2 w-2 animate-pulse rounded-full bg-amd"></span>
+      <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-amd">Live · Public adversarial benchmark</span>
+    </div>
+    <h1 class="max-w-5xl text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+      <span class="text-amd">13</span><span class="text-zinc-600"> of </span><span>13</span>
+      <span class="text-zinc-300"> famous open-source AI agents</span>
+      <span class="text-zinc-300"> fail the </span>
+      <span class="bg-gradient-to-r from-amd via-red-400 to-orange-300 bg-clip-text text-transparent">new safety standard</span><span class="text-zinc-300">.</span>
+    </h1>
+    <p class="mt-6 max-w-2xl text-base text-zinc-400">
+      All 10 OWASP ASI-2026 attack categories run for real on a single AMD MI300X — fake memories, slow-burn manipulation, peer-agent spoofing, identity abuse, and 6 more. Click any agent to see exactly which attacks worked, the full transcript of each one, and the math-checked safety verdict.
+    </p>
+  </section>
+
+  <section class="overflow-hidden rounded-2xl border border-zinc-800">
+    <table class="w-full text-sm">
+      <thead class="bg-zinc-900/60 text-left text-[10px] uppercase tracking-[0.15em] text-zinc-500">
+        <tr>
+          <th class="px-4 py-3 w-12">#</th>
+          <th class="px-4 py-3">Agent</th>
+          <th class="px-4 py-3">Built on</th>
+          <th class="px-4 py-3 text-right">Safety score / 100</th>
+          <th class="px-4 py-3 text-right">Math-checked</th>
+          <th class="px-4 py-3 text-center">Stress grade</th>
+          <th class="px-4 py-3">Last tested</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-800/60">
+        
+<tr class="bg-orange-950/20 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-amd font-bold">01</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/cline.html" class="font-semibold transition-colors hover:text-amd">Cline</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">custom</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-orange-400">64.0</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-orange-400">C</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/cline.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-orange-950/20 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-300 font-bold">02</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/babyagi.html" class="font-semibold transition-colors hover:text-amd">BabyAGI</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">custom</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-orange-400">63.5</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-yellow-400">B</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/babyagi.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-orange-950/20 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-400 font-bold">03</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/aider.html" class="font-semibold transition-colors hover:text-amd">Aider</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">custom</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-orange-400">63.5</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-yellow-400">B</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/aider.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-orange-950/20 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-600">04</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/open-interpreter.html" class="font-semibold transition-colors hover:text-amd">Open Interpreter</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">custom</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-orange-400">60.5</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-orange-400">C</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/open-interpreter.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-orange-950/20 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-600">05</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/crewai-quickstart.html" class="font-semibold transition-colors hover:text-amd">CrewAI Quickstart</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">crewai</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-orange-400">60.5</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-orange-400">C</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/crewai-quickstart.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-orange-950/20 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-600">06</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/autogpt.html" class="font-semibold transition-colors hover:text-amd">AutoGPT</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">custom</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-orange-400">60.0</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-orange-400">C</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/autogpt.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-red-950/30 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-600">07</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/smolagents.html" class="font-semibold transition-colors hover:text-amd">smolagents</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">custom</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-red-400">59.5</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-orange-400">C</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/smolagents.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-red-950/30 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-600">08</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/autogen-quickstart.html" class="font-semibold transition-colors hover:text-amd">AutoGen Quickstart</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">autogen</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-red-400">59.0</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-orange-400">C</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/autogen-quickstart.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-red-950/30 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-600">09</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/gpt-engineer.html" class="font-semibold transition-colors hover:text-amd">GPT-Engineer</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">custom</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-red-400">58.5</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-yellow-400">B</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/gpt-engineer.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-red-950/30 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-600">10</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/claude-engineer.html" class="font-semibold transition-colors hover:text-amd">Claude Engineer</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">custom</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-red-400">58.0</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-yellow-400">B</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/claude-engineer.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-red-950/30 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-600">11</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/langgraph-showcase.html" class="font-semibold transition-colors hover:text-amd">LangGraph Showcase Agent</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">langgraph</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-red-400">57.5</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-orange-400">C</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/langgraph-showcase.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-red-950/30 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-600">12</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/agentgpt.html" class="font-semibold transition-colors hover:text-amd">AgentGPT</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">langchain</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-red-400">55.5</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-orange-400">C</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/agentgpt.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+<tr class="bg-red-950/30 transition-colors hover:bg-zinc-900/80">
+  <td class="px-4 py-3.5 font-mono text-zinc-600">13</td>
+  <td class="px-4 py-3.5">
+    <a href="agent/openhands.html" class="font-semibold transition-colors hover:text-amd">OpenHands</a>
+  </td>
+  <td class="px-4 py-3.5 text-zinc-400">custom</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xl tabular-nums text-red-400">55.5</td>
+  <td class="px-4 py-3.5 text-right font-mono text-xs text-emerald-400">Proven safe</td>
+  <td class="px-4 py-3.5 text-center font-mono text-lg tabular-nums text-yellow-400">B</td>
+  <td class="px-4 py-3.5 text-xs text-zinc-500">May 08, 2026</td>
+  <td class="px-4 py-3.5 text-right">
+    <a href="agent/openhands.html" class="rounded-md border border-amd/40 bg-amd/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amd transition-all hover:bg-amd/20">Report →</a>
+  </td>
+</tr>
+
+      </tbody>
+    </table>
+  </section>
+
+  <section class="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
+    <div class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">What we found</div>
+    <h2 class="mt-1 text-2xl font-bold tracking-tight">No famous AI agent lands in the low-risk band.</h2>
+    <p class="mt-2 max-w-3xl text-sm text-zinc-400">Across all 10 attack categories we run for real, every scored agent falls between moderate and elevated risk. The two biggest weak spots: getting tricked by fake memories and getting worn down by slow-burn manipulation over multiple turns.</p>
+    <div class="mt-5 space-y-2.5">
+      
+<div class="flex items-center gap-3 text-xs">
+  <div class="w-40 font-mono text-zinc-400">≥ 80 · low risk</div>
+  <div class="flex-1 overflow-hidden rounded-full bg-zinc-900"><div class="h-2.5 bg-emerald-500" style="width: 0%"></div></div>
+  <div class="w-10 text-right font-mono text-base font-semibold tabular-nums text-zinc-200">0</div>
+</div>
+
+<div class="flex items-center gap-3 text-xs">
+  <div class="w-40 font-mono text-zinc-400">70–79 · moderate risk</div>
+  <div class="flex-1 overflow-hidden rounded-full bg-zinc-900"><div class="h-2.5 bg-yellow-500" style="width: 0%"></div></div>
+  <div class="w-10 text-right font-mono text-base font-semibold tabular-nums text-zinc-200">0</div>
+</div>
+
+<div class="flex items-center gap-3 text-xs">
+  <div class="w-40 font-mono text-zinc-400">60–69 · elevated risk</div>
+  <div class="flex-1 overflow-hidden rounded-full bg-zinc-900"><div class="h-2.5 bg-orange-500" style="width: 46%"></div></div>
+  <div class="w-10 text-right font-mono text-base font-semibold tabular-nums text-zinc-200">6</div>
+</div>
+
+<div class="flex items-center gap-3 text-xs">
+  <div class="w-40 font-mono text-zinc-400">&lt; 60 · high risk</div>
+  <div class="flex-1 overflow-hidden rounded-full bg-zinc-900"><div class="h-2.5 bg-red-500" style="width: 54%"></div></div>
+  <div class="w-10 text-right font-mono text-base font-semibold tabular-nums text-zinc-200">7</div>
+</div>
+
+    </div>
+  </section>
+</main>
+
+<footer class="mt-20 border-t border-zinc-900">
+  <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-6 py-6 text-xs text-zinc-500 md:flex-row">
+    <div>Powered by <span class="font-semibold text-zinc-300">AMD Instinct™ MI300X</span> · Built for the AMD Developer Hackathon · MIT licensed</div>
+    <div class="flex items-center gap-3">
+      <a href="https://huggingface.co/vaatus/agentready-chaos-remediation-lora-v0" target="_blank" rel="noreferrer" class="hover:text-zinc-300">🤗 LoRA</a>
+      <a href="https://huggingface.co/spaces/vaatus/agentready-judge-demo" target="_blank" rel="noreferrer" class="hover:text-zinc-300">🤗 Space</a>
+      <a href="https://github.com/vaatus/agentready" target="_blank" rel="noreferrer" class="hover:text-zinc-300">GitHub</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
