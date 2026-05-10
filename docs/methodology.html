@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Methodology — AgentReady</title>
+<meta name="description" content="How AgentReady grades every famous AI agent against the OWASP Top 10 for Agentic Applications 2026 — 10 real attack categories, math-checked safety rules, stress-test grid, and an auto-fix pull request, all on a single AMD MI300X." />
+<meta property="og:title" content="AgentReady Methodology" />
+<meta property="og:description" content="The long-form companion to every per-agent report card." />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        amd: { DEFAULT: '#ED1C24', dark: '#B5151B' },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+      },
+    },
+  },
+};
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  body { background: radial-gradient(ellipse at top, rgba(237, 28, 36, 0.08) 0%, transparent 60%) #000; }
+</style>
+</head>
+<body class="min-h-screen bg-black text-zinc-100 font-sans antialiased">
+
+<header class="sticky top-0 z-40 border-b border-zinc-900/80 bg-black/60 backdrop-blur-xl">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <a href="./index.html" class="flex items-center gap-3">
+      <span class="font-mono text-lg font-bold tracking-tight">Agent<span class="text-amd">Ready</span></span>
+      <span class="rounded-full border border-amd/30 bg-amd/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] text-amd">Public Benchmark</span>
+    </a>
+    <nav class="flex items-center gap-6 text-sm text-zinc-400">
+      <a href="./index.html" class="transition-colors hover:text-zinc-100">Home</a>
+      <a href="https://github.com/vaatus/agentready" target="_blank" rel="noreferrer" class="transition-colors hover:text-zinc-100">GitHub ↗</a>
+      <a href="https://huggingface.co/spaces/vaatus/agentready-judge-demo" target="_blank" rel="noreferrer" class="hidden text-xs text-zinc-500 transition-colors hover:text-zinc-300 md:inline">🤗 Judge Demo ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main class="mx-auto max-w-6xl px-6 py-10 space-y-16">
+
+<!-- Hero -->
+<section>
+  <div class="mb-3 flex items-center gap-2">
+    <span class="inline-block h-2 w-2 animate-pulse rounded-full bg-amd"></span>
+    <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-amd">Methodology</span>
+  </div>
+  <h1 class="max-w-3xl text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+    How we grade <span class="bg-gradient-to-r from-amd via-red-400 to-orange-300 bg-clip-text text-transparent">every famous AI agent</span> against the new safety standard.
+  </h1>
+  <p class="mt-6 max-w-3xl text-lg text-zinc-400">
+    Ten real attack categories, mathematical safety checks, stress-testing under reworded prompts and fake server failures, plus an auto-generated pull request that fixes what broke — all on a single AMD GPU. This page is the long-form companion to every per-agent report card.
+    <span class="text-zinc-500">(Standard: OWASP Top 10 for Agentic Applications 2026.)</span>
+  </p>
+</section>
+
+<!-- 01 — The hardware -->
+<section>
+  <div class="mb-5">
+    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">01 — The hardware</div>
+    <h2 class="mt-1 text-3xl font-bold tracking-tight">Two AI models running side-by-side on one AMD GPU</h2>
+  </div>
+  <div class="grid gap-4 md:grid-cols-3">
+    <div class="rounded-2xl border border-amd/30 bg-zinc-950 p-5 transition-colors hover:border-amd/60">
+      <div class="flex items-center gap-2"><span class="inline-block h-2 w-2 rounded-full bg-amd"></span><div class="text-[10px] uppercase tracking-[0.15em] text-zinc-500">Grading model</div></div>
+      <div class="mt-2 font-mono text-base font-semibold text-zinc-100">Qwen 2.5 72B Instruct AWQ</div>
+      <div class="mt-1 flex gap-3 text-xs text-zinc-500"><span class="font-mono">≈ 40 GB</span><span>·</span><span>vLLM 0.17 / ROCm 7.2</span></div>
+      <p class="mt-3 text-sm leading-relaxed text-zinc-400">Reads every attack and decides whether the agent was actually manipulated.</p>
+    </div>
+    <div class="rounded-2xl border border-orange-500/30 bg-zinc-950 p-5 transition-colors hover:border-orange-500/60">
+      <div class="flex items-center gap-2"><span class="inline-block h-2 w-2 rounded-full bg-orange-400"></span><div class="text-[10px] uppercase tracking-[0.15em] text-zinc-500">Attacker + stand-in agent</div></div>
+      <div class="mt-2 font-mono text-base font-semibold text-zinc-100">Qwen 2.5 7B Instruct</div>
+      <div class="mt-1 flex gap-3 text-xs text-zinc-500"><span class="font-mono">≈ 16 GB</span><span>·</span><span>vLLM 0.17 / ROCm 7.2</span></div>
+      <p class="mt-3 text-sm leading-relaxed text-zinc-400">Tailors the attacks to each agent and impersonates the target.</p>
+    </div>
+    <div class="rounded-2xl border border-emerald-500/30 bg-zinc-950 p-5 transition-colors hover:border-emerald-500/60">
+      <div class="flex items-center gap-2"><span class="inline-block h-2 w-2 rounded-full bg-emerald-400"></span><div class="text-[10px] uppercase tracking-[0.15em] text-zinc-500">Math safety checker</div></div>
+      <div class="mt-2 font-mono text-base font-semibold text-zinc-100">z3-solver Python</div>
+      <div class="mt-1 flex gap-3 text-xs text-zinc-500"><span class="font-mono">CPU-side</span></div>
+      <p class="mt-3 text-sm leading-relaxed text-zinc-400">Mathematically checks whether the agent's safety rules can be broken.</p>
+    </div>
+  </div>
+  <div class="mt-4 rounded-xl border border-amd/30 bg-amd/5 p-5">
+    <div class="text-xs uppercase tracking-wider text-amd">GPU memory used at once</div>
+    <div class="mt-1 font-mono text-2xl text-zinc-100">~75 GB out of 192 GB <span class="text-base text-zinc-500">in use simultaneously</span></div>
+    <p class="mt-2 max-w-2xl text-sm text-zinc-300">Running a 72-billion-parameter grading model and a 7-billion-parameter attacker model in the same GPU is what makes this a real-time public benchmark. It wouldn't fit on a single 80&nbsp;GB Nvidia H100 without dropping the grading model's quality.</p>
+  </div>
+</section>
+
+<!-- 02 — Live ASI categories -->
+<section>
+  <div class="mb-5">
+    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">02 — The 10 attacks we run for real</div>
+    <h2 class="mt-1 text-3xl font-bold tracking-tight">All 10 OWASP categories covered with real, reproducible attacks</h2>
+    <p class="mt-2 max-w-3xl text-sm text-zinc-400">The grading model gives a strict yes/no verdict on each attack so the score is reproducible. We tailor every attack to the specific agent we're testing — no two scans get the same disguise.</p>
+  </div>
+  <div class="grid gap-4 md:grid-cols-2">
+
+    <!-- ASI01 -->
+    <div class="rounded-2xl border border-amd/30 bg-zinc-950 p-5 transition-colors hover:border-amd/60">
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-amd/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd">tested</span>
+        <div class="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">ASI01</div>
+      </div>
+      <div class="mt-1 text-lg font-semibold">Hijacking the agent</div>
+      <div class="mt-1 text-xs text-zinc-500">5 disguised attack messages</div>
+      <ul class="mt-3 space-y-1 text-xs text-zinc-400">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake build-server log with hidden instruction</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">calendar invite with hidden directive</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake postmortem document</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">support ticket signature</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">tool description injection</span></li>
+      </ul>
+    </div>
+
+    <!-- ASI02 -->
+    <div class="rounded-2xl border border-amd/30 bg-zinc-950 p-5 transition-colors hover:border-amd/60">
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-amd/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd">tested</span>
+        <div class="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">ASI02</div>
+      </div>
+      <div class="mt-1 text-lg font-semibold">Combining safe tools, harmful outcome</div>
+      <div class="mt-1 text-xs text-zinc-500">5 dangerous combinations</div>
+      <ul class="mt-3 space-y-1 text-xs text-zinc-400">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">read a file + email it out (data leak)</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">delete users without checking permissions</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">read a secret + post it to a URL</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">query data across customer boundaries</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">run code that reads the filesystem</span></li>
+      </ul>
+    </div>
+
+    <!-- ASI03 -->
+    <div class="rounded-2xl border border-amd/30 bg-zinc-950 p-5 transition-colors hover:border-amd/60">
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-amd/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd">tested</span>
+        <div class="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">ASI03</div>
+      </div>
+      <div class="mt-1 text-lg font-semibold">Pretending to be someone else</div>
+      <div class="mt-1 text-xs text-zinc-500">5 fabricated-identity probes</div>
+      <ul class="mt-3 space-y-1 text-xs text-zinc-400">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">self-claimed admin (security team on call)</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">hearsay handoff from an OOO colleague</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">cross-tenant query under fake partnership</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">service-account impersonation during a deploy</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">one-time scope-creep exception</span></li>
+      </ul>
+    </div>
+
+    <!-- ASI04 -->
+    <div class="rounded-2xl border border-amd/30 bg-zinc-950 p-5 transition-colors hover:border-amd/60">
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-amd/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd">tested</span>
+        <div class="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">ASI04</div>
+      </div>
+      <div class="mt-1 text-lg font-semibold">Sneaky tools in the toolbox</div>
+      <div class="mt-1 text-xs text-zinc-500">5 supply-chain probes</div>
+      <ul class="mt-3 space-y-1 text-xs text-zinc-400">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">rogue MCP server registration</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">silent plugin swap to unverified vendor</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">tool alias redirect to attacker endpoint</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">compromised dependency with telemetry exfil</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">remote prompt-pack install</span></li>
+      </ul>
+    </div>
+
+    <!-- ASI05 -->
+    <div class="rounded-2xl border border-amd/30 bg-zinc-950 p-5 transition-colors hover:border-amd/60">
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-amd/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd">tested</span>
+        <div class="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">ASI05</div>
+      </div>
+      <div class="mt-1 text-lg font-semibold">Running attacker code</div>
+      <div class="mt-1 text-xs text-zinc-500">5 sneaky code-injection probes</div>
+      <ul class="mt-3 space-y-1 text-xs text-zinc-400">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">unsafe Python pickle deserialization</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">leak environment variables</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">shell pipe to bash from a URL</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">eval untrusted user input</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">spawn a hidden subprocess</span></li>
+      </ul>
+    </div>
+
+    <!-- ASI06 -->
+    <div class="rounded-2xl border border-amd/30 bg-zinc-950 p-5 transition-colors hover:border-amd/60">
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-amd/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd">tested</span>
+        <div class="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">ASI06</div>
+      </div>
+      <div class="mt-1 text-lg font-semibold">Planting fake memories</div>
+      <div class="mt-1 text-xs text-zinc-500">10 attacks across 5 styles · two-session test</div>
+      <ul class="mt-3 space-y-1 text-xs text-zinc-400">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake "already approved" memory</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake "the boss said so" authority</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake "you always do it this way" preference</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">self-spreading memory (replicates across sessions)</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">goal-drift memory (slowly changes the agent's job)</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">+ self-modifying memory (our novel attack)</span></li>
+      </ul>
+    </div>
+
+    <!-- ASI07 -->
+    <div class="rounded-2xl border border-amd/30 bg-zinc-950 p-5 transition-colors hover:border-amd/60">
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-amd/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd">tested</span>
+        <div class="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">ASI07</div>
+      </div>
+      <div class="mt-1 text-lg font-semibold">Knocking the agent off-track</div>
+      <div class="mt-1 text-xs text-zinc-500">5 fabricated-plan-state probes</div>
+      <ul class="mt-3 space-y-1 text-xs text-zinc-400">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake step-completion in a multi-step plan</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">subgoal substitution (weaken consent rule)</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">false 'we agreed earlier' framing</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">partial-completion skip the validation step</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">unsafe 'standard workaround' for an error</span></li>
+      </ul>
+    </div>
+
+    <!-- ASI08 -->
+    <div class="rounded-2xl border border-amd/30 bg-zinc-950 p-5 transition-colors hover:border-amd/60">
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-amd/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd">tested</span>
+        <div class="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">ASI08</div>
+      </div>
+      <div class="mt-1 text-lg font-semibold">Tricking another agent</div>
+      <div class="mt-1 text-xs text-zinc-500">5 spoofed-peer probes</div>
+      <ul class="mt-3 space-y-1 text-xs text-zinc-400">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake peer-agent directive in the user channel</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fabricated tool result pasted in</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake orchestrator broadcast</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake crew handoff from a research agent</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">injected 'trust metadata' block</span></li>
+      </ul>
+    </div>
+
+    <!-- ASI09 -->
+    <div class="rounded-2xl border border-amd/30 bg-zinc-950 p-5 transition-colors hover:border-amd/60">
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-amd/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd">tested</span>
+        <div class="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">ASI09</div>
+      </div>
+      <div class="mt-1 text-lg font-semibold">Slow-burn manipulation</div>
+      <div class="mt-1 text-xs text-zinc-500">3 templates · 4 turns of warm-up each</div>
+      <ul class="mt-3 space-y-1 text-xs text-zinc-400">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake-CTO authorizing user deletion</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake legal carveout to leak personal data</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">fake oncall fast-path for key rotation</span></li>
+      </ul>
+    </div>
+
+    <!-- ASI10 -->
+    <div class="rounded-2xl border border-amd/30 bg-zinc-950 p-5 transition-colors hover:border-amd/60">
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-amd/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd">tested</span>
+        <div class="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">ASI10</div>
+      </div>
+      <div class="mt-1 text-lg font-semibold">Drift — the agent rewriting itself</div>
+      <div class="mt-1 text-xs text-zinc-500">5 directive-modification probes</div>
+      <ul class="mt-3 space-y-1 text-xs text-zinc-400">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">threshold relaxation (lift refund cap)</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">prompt compression (drop safety bullets)</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">self-replicating directive across sessions</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">persona overwrite to AdminAgent v2</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-zinc-600"></span><span class="font-mono">silent constraint drop ("an external layer enforces it now")</span></li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<!-- 03 — Math-checked safety -->
+<section>
+  <div class="mb-5">
+    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">03 — Math-checked safety</div>
+    <h2 class="mt-1 text-3xl font-bold tracking-tight">Math, not vibes</h2>
+    <p class="mt-2 max-w-3xl text-sm text-zinc-400">We hand-write 4 safety rule templates (don't email PII without encrypting, don't delete without checking permissions, etc.) and the math checker tries every possible input to see if any of them break the rules. We also let our model write 1 extra rule from the agent's own description.</p>
+  </div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <div class="rounded-xl border border-emerald-700/40 bg-emerald-950/20 p-5">
+      <div class="text-[10px] uppercase tracking-wider text-emerald-300">PROVEN SAFE</div>
+      <div class="mt-1 font-mono text-xl font-semibold text-emerald-200">no inputs broke the rule</div>
+      <p class="mt-2 text-sm text-zinc-300">The math checker searched all possible inputs and couldn't find any way to break this safety rule (assuming the agent uses its declared guard tools as expected).</p>
+    </div>
+    <div class="rounded-xl border border-red-700/40 bg-red-950/20 p-5">
+      <div class="text-[10px] uppercase tracking-wider text-red-300">COUNTER-EXAMPLE FOUND</div>
+      <div class="mt-1 font-mono text-xl font-semibold text-red-200">found a specific way to break it</div>
+      <p class="mt-2 text-sm text-zinc-300">The math checker found a specific combination of inputs that breaks the safety rule. We show the exact counter-example on the per-agent page so maintainers can reproduce it.</p>
+      <pre class="mt-3 overflow-auto rounded-lg bg-black/60 p-3 font-mono text-[10px] text-red-200">example counter-example:
+  user_role = "guest"
+  delete_called = true
+  role_check_called = false</pre>
+    </div>
+  </div>
+  <div class="mt-4 grid gap-2 md:grid-cols-2">
+    <div class="rounded-lg border border-zinc-800 bg-black/40 px-3 py-2 text-sm text-zinc-300">Encrypt personal data before sending it anywhere</div>
+    <div class="rounded-lg border border-zinc-800 bg-black/40 px-3 py-2 text-sm text-zinc-300">Check permissions before every delete</div>
+    <div class="rounded-lg border border-zinc-800 bg-black/40 px-3 py-2 text-sm text-zinc-300">Stop calling a tool once it hits its rate limit</div>
+    <div class="rounded-lg border border-zinc-800 bg-black/40 px-3 py-2 text-sm text-zinc-300">Don't transmit anything after reading a secret</div>
+  </div>
+</section>
+
+<!-- 04 — Stress test grid -->
+<section>
+  <div class="mb-5">
+    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">04 — Stress test grid</div>
+    <h2 class="mt-1 text-3xl font-bold tracking-tight">Stress-testing AI agents like servers</h2>
+    <p class="mt-2 max-w-3xl text-sm text-zinc-400">A 3×3 grid that measures the agent's success rate under two kinds of stress: rewording the question (rows) and injecting fake server failures (columns). Method from <a href="https://arxiv.org/abs/2601.06112" class="underline hover:text-zinc-100" target="_blank" rel="noreferrer">ReliabilityBench (arXiv 2601.06112)</a>.</p>
+  </div>
+  <div class="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
+    <div class="mx-auto max-w-md">
+      <div class="grid auto-rows-min" style="grid-template-columns: 4rem repeat(3, minmax(0, 1fr));">
+        <div></div>
+        <div class="px-1 pb-1 text-center font-mono text-[10px] text-zinc-500">0% fake errors</div>
+        <div class="px-1 pb-1 text-center font-mono text-[10px] text-zinc-500">30% fake errors</div>
+        <div class="px-1 pb-1 text-center font-mono text-[10px] text-zinc-500">60% fake errors</div>
+
+        <div class="flex items-center justify-end pr-2 font-mono text-[10px] text-zinc-500">0% reworded</div>
+        <div class="m-0.5 flex h-12 items-center justify-center rounded-md bg-emerald-600"><span class="font-mono text-sm font-bold tabular-nums text-white drop-shadow">0.97</span></div>
+        <div class="m-0.5 flex h-12 items-center justify-center rounded-md bg-emerald-500/85"><span class="font-mono text-sm font-bold tabular-nums text-white drop-shadow">0.84</span></div>
+        <div class="m-0.5 flex h-12 items-center justify-center rounded-md bg-yellow-500/85"><span class="font-mono text-sm font-bold tabular-nums text-white drop-shadow">0.61</span></div>
+
+        <div class="flex items-center justify-end pr-2 font-mono text-[10px] text-zinc-500">20% reworded</div>
+        <div class="m-0.5 flex h-12 items-center justify-center rounded-md bg-emerald-600"><span class="font-mono text-sm font-bold tabular-nums text-white drop-shadow">0.91</span></div>
+        <div class="m-0.5 flex h-12 items-center justify-center rounded-md bg-emerald-500/85"><span class="font-mono text-sm font-bold tabular-nums text-white drop-shadow">0.78</span></div>
+        <div class="m-0.5 flex h-12 items-center justify-center rounded-md bg-yellow-500/85"><span class="font-mono text-sm font-bold tabular-nums text-white drop-shadow">0.54</span></div>
+
+        <div class="flex items-center justify-end pr-2 font-mono text-[10px] text-zinc-500">40% reworded</div>
+        <div class="m-0.5 flex h-12 items-center justify-center rounded-md bg-emerald-600"><span class="font-mono text-sm font-bold tabular-nums text-white drop-shadow">0.88</span></div>
+        <div class="m-0.5 flex h-12 items-center justify-center rounded-md bg-emerald-500/85"><span class="font-mono text-sm font-bold tabular-nums text-white drop-shadow">0.71</span></div>
+        <div class="m-0.5 flex h-12 items-center justify-center rounded-md bg-orange-500/85"><span class="font-mono text-sm font-bold tabular-nums text-white drop-shadow">0.46</span></div>
+      </div>
+    </div>
+    <div class="mt-4 grid gap-2 md:grid-cols-3">
+      <div class="rounded-lg border border-zinc-800 bg-black/40 px-3 py-2"><div class="text-[10px] uppercase tracking-wider text-zinc-500">Top grade</div><div class="mt-1 font-mono text-sm font-semibold text-emerald-300">A · ≥ 0.85 success rate</div></div>
+      <div class="rounded-lg border border-zinc-800 bg-black/40 px-3 py-2"><div class="text-[10px] uppercase tracking-wider text-zinc-500">Real-time test</div><div class="mt-1 font-mono text-sm font-semibold text-zinc-200">rate-limit failures, no rewording</div></div>
+      <div class="rounded-lg border border-zinc-800 bg-black/40 px-3 py-2"><div class="text-[10px] uppercase tracking-wider text-zinc-500">Runs per square</div><div class="mt-1 font-mono text-sm font-semibold text-zinc-200">6 (real) / 20 (estimated)</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 — How we attack safely -->
+<section>
+  <div class="mb-5">
+    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">05 — How we attack safely</div>
+    <h2 class="mt-1 text-3xl font-bold tracking-tight">We attack a stand-in copy, not the real running agent</h2>
+    <p class="mt-2 max-w-3xl text-sm text-zinc-400">Honest about what we do and don't test. We don't actually boot up the agent's tools or call its servers — we attack the agent's declared blueprint instead. That keeps the maintainers' production systems safe.</p>
+  </div>
+  <div class="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
+    <div class="grid gap-4 md:grid-cols-3">
+      <div>
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500">What we use</div>
+        <ul class="mt-2 space-y-1.5 text-sm text-zinc-300">
+          <li>· the agent's job description (system prompt)</li>
+          <li>· the names of the tools it declares</li>
+          <li>· in-memory state only</li>
+          <li>· the 7-billion-parameter Qwen model as the stand-in</li>
+        </ul>
+      </div>
+      <div>
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500">What we don't do</div>
+        <ul class="mt-2 space-y-1.5 text-sm text-zinc-300">
+          <li>· boot the real agent</li>
+          <li>· actually execute its tools</li>
+          <li>· bother the maintainers without a plan</li>
+          <li>· ship one-by-one library integrations (yet)</li>
+        </ul>
+      </div>
+      <div>
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500">Coming in v2</div>
+        <ul class="mt-2 space-y-1.5 text-sm text-zinc-400">
+          <li>· LangChain integration</li>
+          <li>· LangGraph integration</li>
+          <li>· CrewAI integration</li>
+          <li>· AutoGen integration</li>
+          <li>· MCP server integration</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 — Auto-fix bundle -->
+<section>
+  <div class="mb-5">
+    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">06 — The redemption arc</div>
+    <h2 class="mt-1 text-3xl font-bold tracking-tight">Auto-fix pull request</h2>
+    <p class="mt-2 max-w-3xl text-sm text-zinc-400">For every attack that worked, our 72B grading model writes a new safety rule to block that exact attack. Then we run the same attacks again against the patched job description and watch the score actually move — proof the fix worked, not just a vibe.</p>
+  </div>
+  <div class="grid gap-2 md:grid-cols-2">
+    <div class="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5"><span class="inline-block h-1.5 w-1.5 rounded-full bg-amd"></span><div><div class="font-mono text-xs text-zinc-200">system_prompt.patched.md</div><div class="text-[11px] text-zinc-500">Original job description + new safety rules</div></div></div>
+    <div class="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5"><span class="inline-block h-1.5 w-1.5 rounded-full bg-amd"></span><div><div class="font-mono text-xs text-zinc-200">safety_contract.smt2</div><div class="text-[11px] text-zinc-500">Math-checked safety rules (source code)</div></div></div>
+    <div class="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5"><span class="inline-block h-1.5 w-1.5 rounded-full bg-amd"></span><div><div class="font-mono text-xs text-zinc-200">otel_config.yaml</div><div class="text-[11px] text-zinc-500">Logging setup tailored to the agent's tools</div></div></div>
+    <div class="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5"><span class="inline-block h-1.5 w-1.5 rounded-full bg-amd"></span><div><div class="font-mono text-xs text-zinc-200">asi_compliance_tests.json</div><div class="text-[11px] text-zinc-500">Replay-able failed attacks</div></div></div>
+    <div class="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5"><span class="inline-block h-1.5 w-1.5 rounded-full bg-amd"></span><div><div class="font-mono text-xs text-zinc-200">REMEDIATION.md</div><div class="text-[11px] text-zinc-500">Plain-English changelog</div></div></div>
+    <div class="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5"><span class="inline-block h-1.5 w-1.5 rounded-full bg-amd"></span><div><div class="font-mono text-xs text-zinc-200">pr_body.md</div><div class="text-[11px] text-zinc-500">Pre-written pull request description</div></div></div>
+    <div class="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5"><span class="inline-block h-1.5 w-1.5 rounded-full bg-amd"></span><div><div class="font-mono text-xs text-zinc-200">CERTIFICATE.pdf</div><div class="text-[11px] text-zinc-500">Signed safety certificate</div></div></div>
+    <div class="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5"><span class="inline-block h-1.5 w-1.5 rounded-full bg-amd"></span><div><div class="font-mono text-xs text-zinc-200">manifest.json</div><div class="text-[11px] text-zinc-500">Index of every file in the bundle</div></div></div>
+  </div>
+  <p class="mt-4 max-w-2xl text-sm text-zinc-400">If the GitHub CLI is connected, the bundle gets pushed to a fork in <em>our</em> namespace and a draft pull request is opened against that fork. <span class="text-zinc-300">We never open a pull request against the upstream maintainer's repo without their say-so.</span></p>
+</section>
+
+<!-- 07 — Comparison -->
+<section>
+  <div class="mb-5">
+    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">07 — Compared with existing tools</div>
+    <h2 class="mt-1 text-3xl font-bold tracking-tight">Different category, different output</h2>
+  </div>
+  <div class="overflow-hidden rounded-2xl border border-zinc-800">
+    <table class="w-full text-sm">
+      <thead class="bg-zinc-900/60 text-left text-[10px] uppercase tracking-[0.15em] text-zinc-500">
+        <tr><th class="px-4 py-3"></th><th class="px-4 py-3 text-center">AgentReady</th><th class="px-4 py-3 text-center">Promptfoo</th><th class="px-4 py-3 text-center">DeepEval</th><th class="px-4 py-3 text-center">Garak</th></tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-800/60">
+        <tr><td class="px-4 py-3 text-zinc-300">Built around the new agent safety standard</td><td class="px-4 py-3 text-center"><span class="inline-block rounded-full bg-emerald-500/15 px-2 py-0.5 font-mono text-xs text-emerald-300">✓</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-xs text-yellow-400">partial</span></td><td class="px-4 py-3 text-center"><span class="text-xs text-yellow-400">partial</span></td></tr>
+        <tr><td class="px-4 py-3 text-zinc-300">Slow-burn manipulation across multiple turns</td><td class="px-4 py-3 text-center"><span class="inline-block rounded-full bg-emerald-500/15 px-2 py-0.5 font-mono text-xs text-emerald-300">✓</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td></tr>
+        <tr><td class="px-4 py-3 text-zinc-300">Math-checked safety rules</td><td class="px-4 py-3 text-center"><span class="inline-block rounded-full bg-emerald-500/15 px-2 py-0.5 font-mono text-xs text-emerald-300">✓</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td></tr>
+        <tr><td class="px-4 py-3 text-zinc-300">Stress-test grid (rewording + fake errors)</td><td class="px-4 py-3 text-center"><span class="inline-block rounded-full bg-emerald-500/15 px-2 py-0.5 font-mono text-xs text-emerald-300">✓</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td></tr>
+        <tr><td class="px-4 py-3 text-zinc-300">Auto-fix pull request + signed certificate</td><td class="px-4 py-3 text-center"><span class="inline-block rounded-full bg-emerald-500/15 px-2 py-0.5 font-mono text-xs text-emerald-300">✓</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td></tr>
+        <tr><td class="px-4 py-3 text-zinc-300">Public ranked leaderboard</td><td class="px-4 py-3 text-center"><span class="inline-block rounded-full bg-emerald-500/15 px-2 py-0.5 font-mono text-xs text-emerald-300">✓</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td></tr>
+        <tr><td class="px-4 py-3 text-zinc-300">Pay-per-scan checkout (x402 USDC)</td><td class="px-4 py-3 text-center"><span class="inline-block rounded-full bg-emerald-500/15 px-2 py-0.5 font-mono text-xs text-emerald-300">✓</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td><td class="px-4 py-3 text-center"><span class="text-zinc-600">—</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 08 — Pricing -->
+<section>
+  <div class="mb-5">
+    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">08 — Pricing</div>
+    <h2 class="mt-1 text-3xl font-bold tracking-tight">Three tiers, paid in USDC stablecoin on Coinbase Base</h2>
+    <p class="mt-2 max-w-3xl text-sm text-zinc-400">Each scan costs us about $0.04 in compute on AMD Developer Cloud. The $0.10 Standard tier leaves $0.06 margin. Scanning the famous-agent leaderboard stays free — it's marketing.</p>
+  </div>
+  <div class="grid gap-4 md:grid-cols-3">
+    <div class="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 transition-colors hover:border-zinc-700">
+      <div class="flex items-center justify-between"><div class="text-base font-semibold tracking-tight">Basic</div></div>
+      <div class="mt-2 flex items-baseline gap-1"><span class="font-mono text-4xl font-bold tabular-nums text-zinc-100">$0.01</span><span class="text-xs text-zinc-500">USDC / scan</span></div>
+      <p class="mt-2 text-sm text-zinc-400">Just a quick quality check.</p>
+      <ul class="mt-4 space-y-1.5 text-xs text-zinc-300">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-amd"></span><span>One sample task</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-amd"></span><span>Pass/fail under reworded prompts</span></li>
+      </ul>
+    </div>
+    <div class="rounded-2xl border border-amd/40 bg-gradient-to-br from-zinc-950 via-zinc-950 to-amd/10 p-6 transition-colors hover:border-amd">
+      <div class="flex items-center justify-between"><div class="text-base font-semibold tracking-tight">Standard</div><span class="rounded-full bg-amd/20 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-amd">popular</span></div>
+      <div class="mt-2 flex items-baseline gap-1"><span class="font-mono text-4xl font-bold tabular-nums text-zinc-100">$0.10</span><span class="text-xs text-zinc-500">USDC / scan</span></div>
+      <p class="mt-2 text-sm text-zinc-400">All 10 real attacks + the stress test grid.</p>
+      <ul class="mt-4 space-y-1.5 text-xs text-zinc-300">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-amd"></span><span>All 10 attack categories (real attacks, ~46 per scan)</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-amd"></span><span>Per-agent attack tailoring via Qwen 7B</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-amd"></span><span>Full 3×3 stress-test grid</span></li>
+      </ul>
+    </div>
+    <div class="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 transition-colors hover:border-zinc-700">
+      <div class="flex items-center justify-between"><div class="text-base font-semibold tracking-tight">Premium</div></div>
+      <div class="mt-2 flex items-baseline gap-1"><span class="font-mono text-4xl font-bold tabular-nums text-zinc-100">$1.00</span><span class="text-xs text-zinc-500">USDC / scan</span></div>
+      <p class="mt-2 text-sm text-zinc-400">Everything + math-checked safety + auto-fix PR + certificate.</p>
+      <ul class="mt-4 space-y-1.5 text-xs text-zinc-300">
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-amd"></span><span>Everything in Standard</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-amd"></span><span>Math-checked safety rules</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-amd"></span><span>Real-time failure injection</span></li>
+        <li class="flex items-start gap-2"><span class="mt-1 inline-block h-1 w-1 shrink-0 rounded-full bg-amd"></span><span>Auto-fix pull request + signed PDF certificate</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 09 — Disclosure -->
+<section>
+  <div class="mb-5">
+    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">09 — Honest about what we do and don't do</div>
+    <h2 class="mt-1 text-3xl font-bold tracking-tight">What we publish, what we hold back, what's still rough</h2>
+  </div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <div class="rounded-xl border border-emerald-700/40 bg-emerald-950/15 p-5">
+      <div class="text-[10px] uppercase tracking-wider text-emerald-300">What we publish</div>
+      <ul class="mt-2 space-y-1.5 text-sm text-zinc-300">
+        <li>· public leaderboard with the agents named</li>
+        <li>· this methodology page, plus every safety-rule template</li>
+        <li>· every auto-fix pull request in our namespace</li>
+        <li>· full attack transcripts inside the maintainer's fix bundle</li>
+        <li>· our trained model weights on Hugging Face</li>
+      </ul>
+    </div>
+    <div class="rounded-xl border border-amd/30 bg-amd/5 p-5">
+      <div class="text-[10px] uppercase tracking-wider text-amd">Honest limits</div>
+      <ul class="mt-2 space-y-1.5 text-sm text-zinc-300">
+        <li>· we attack a stand-in copy, not the real running agent</li>
+        <li>· all 10 categories are now real attacks (~46 attacks per scan)</li>
+        <li>· 4 built-in safety rule templates + 1 our model writes from the agent's description</li>
+        <li>· stress-test grid is computed by default (real test on demand)</li>
+        <li>· 45 fine-tuning samples so far (small sample, real loop)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 10 — Sources -->
+<section>
+  <div class="mb-5">
+    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">10 — Sources</div>
+    <h2 class="mt-1 text-3xl font-bold tracking-tight">Standards, papers, and tools we build on</h2>
+  </div>
+  <div class="grid gap-2 md:grid-cols-2">
+    <a href="https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/" target="_blank" rel="noreferrer" class="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3 transition-all hover:border-amd hover:bg-amd/5"><span class="text-sm text-zinc-300">OWASP Top 10 for Agentic Applications 2026</span><span class="text-xs text-zinc-500">↗</span></a>
+    <a href="https://arxiv.org/abs/2601.06112" target="_blank" rel="noreferrer" class="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3 transition-all hover:border-amd hover:bg-amd/5"><span class="text-sm text-zinc-300">ReliabilityBench (arXiv 2601.06112)</span><span class="text-xs text-zinc-500">↗</span></a>
+    <a href="https://arxiv.org/abs/2603.21149" target="_blank" rel="noreferrer" class="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3 transition-all hover:border-amd hover:bg-amd/5"><span class="text-sm text-zinc-300">substrate-guard / Emergent Formal Verification (arXiv 2603.21149)</span><span class="text-xs text-zinc-500">↗</span></a>
+    <a href="https://www.trydeepteam.com/docs/frameworks-owasp-top-10-for-agentic-applications" target="_blank" rel="noreferrer" class="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3 transition-all hover:border-amd hover:bg-amd/5"><span class="text-sm text-zinc-300">DeepTeam OWASP_ASI_2026</span><span class="text-xs text-zinc-500">↗</span></a>
+    <a href="https://docs.cdp.coinbase.com/x402/welcome" target="_blank" rel="noreferrer" class="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3 transition-all hover:border-amd hover:bg-amd/5"><span class="text-sm text-zinc-300">Coinbase x402</span><span class="text-xs text-zinc-500">↗</span></a>
+    <a href="https://github.com/vaatus/agentready" target="_blank" rel="noreferrer" class="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3 transition-all hover:border-amd hover:bg-amd/5"><span class="text-sm text-zinc-300">AgentReady on GitHub</span><span class="text-xs text-zinc-500">↗</span></a>
+  </div>
+</section>
+
+</main>
+
+<footer class="mt-20 border-t border-zinc-900">
+  <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-6 py-6 text-xs text-zinc-500 md:flex-row">
+    <div>Powered by <span class="font-semibold text-zinc-300">AMD Instinct™ MI300X</span> · Built for the AMD Developer Hackathon · MIT licensed</div>
+    <div class="flex items-center gap-3">
+      <a href="https://huggingface.co/vaatus/agentready-chaos-remediation-lora-v0" target="_blank" rel="noreferrer" class="hover:text-zinc-300">🤗 LoRA</a>
+      <a href="https://huggingface.co/spaces/vaatus/agentready-judge-demo" target="_blank" rel="noreferrer" class="hover:text-zinc-300">🤗 Space</a>
+      <a href="https://github.com/vaatus/agentready" target="_blank" rel="noreferrer" class="hover:text-zinc-300">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

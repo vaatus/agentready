@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AgentReady — public benchmark for AI agents</title>
+<meta name="description" content="The public adversarial benchmark for AI agents. We attack every famous open-source AI agent against the OWASP Top 10 for Agentic Applications 2026 and open a real GitHub PR that fixes what broke. Powered by AMD MI300X." />
+<meta property="og:title" content="AgentReady — public benchmark for AI agents" />
+<meta property="og:description" content="All 10 OWASP ASI-2026 attacks run for real on a single AMD MI300X." />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: { colors: { amd: { DEFAULT: '#ED1C24', dark: '#B5151B' } } } },
+};
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; background: radial-gradient(ellipse at top, rgba(237, 28, 36, 0.08) 0%, transparent 60%) #000; }
+</style>
+</head>
+<body class="min-h-screen bg-black text-zinc-100 antialiased">
+
+<header class="sticky top-0 z-40 border-b border-zinc-900/80 bg-black/60 backdrop-blur-xl">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <a href="./index.html" class="flex items-center gap-3">
+      <span class="font-mono text-lg font-bold tracking-tight">Agent<span class="text-amd">Ready</span></span>
+      <span class="rounded-full border border-amd/30 bg-amd/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] text-amd">Public Benchmark</span>
+    </a>
+    <nav class="flex items-center gap-6 text-sm text-zinc-400">
+      <a href="./methodology.html" class="transition-colors hover:text-zinc-100">Methodology</a>
+      <a href="https://github.com/vaatus/agentready" target="_blank" rel="noreferrer" class="transition-colors hover:text-zinc-100">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main class="mx-auto max-w-6xl px-6 py-14 space-y-14">
+
+  <section>
+    <div class="mb-3 flex items-center gap-2">
+      <span class="inline-block h-2 w-2 animate-pulse rounded-full bg-amd"></span>
+      <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-amd">Live · Public adversarial benchmark</span>
+    </div>
+    <h1 class="max-w-5xl text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl">
+      <span class="text-amd">13</span><span class="text-zinc-600"> of </span><span>13</span>
+      <span class="text-zinc-300"> famous open-source AI agents</span><br class="hidden md:block" />
+      <span class="text-zinc-300"> fail the </span>
+      <span class="bg-gradient-to-r from-amd via-red-400 to-orange-300 bg-clip-text text-transparent">new safety standard</span><span class="text-zinc-300">.</span>
+    </h1>
+    <p class="mt-6 max-w-2xl text-lg text-zinc-400">
+      We attack every famous open-source AI agent the way a real attacker would — disguised messages, fake memories, slow-burn manipulation, fake server errors — then we mathematically check their safety rules and open a pull request that fixes what's broken. All on a single AMD GPU.
+      <span class="text-zinc-500">(Standard: OWASP Top 10 for Agentic Applications 2026.)</span>
+    </p>
+    <div class="mt-6 flex flex-wrap items-center gap-2">
+      <span class="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-3 py-1.5 text-xs"><span class="font-mono text-zinc-200">13</span><span class="text-zinc-500">agents tested</span></span>
+      <span class="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-3 py-1.5 text-xs"><span class="font-mono text-zinc-200">10 / 10</span><span class="text-zinc-500">real attack categories</span></span>
+      <span class="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-3 py-1.5 text-xs"><span class="font-mono text-zinc-200">Qwen 2.5 72B</span><span class="text-zinc-500">grading model</span></span>
+      <span class="inline-flex items-center gap-2 rounded-full border border-amd/40 bg-amd/10 px-3 py-1.5 text-xs"><span class="font-mono text-amd font-semibold">~75 / 192 GB</span><span class="text-zinc-500">GPU memory used</span></span>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="text-2xl font-bold tracking-tight mb-4">Where to go</h2>
+    <div class="grid gap-3 md:grid-cols-2">
+      <a href="./methodology.html" class="rounded-2xl border border-amd/40 bg-gradient-to-br from-zinc-950 via-zinc-950 to-amd/10 p-5 transition-all hover:border-amd">
+        <div class="text-[10px] uppercase tracking-[0.2em] text-amd">Long-form methodology</div>
+        <div class="mt-1 text-lg font-semibold">How we grade every famous AI agent</div>
+        <div class="mt-2 text-sm text-zinc-400">Hardware, all 10 attack categories with examples, math-checked safety, stress-test grid, auto-fix bundle, comparison vs incumbents, pricing, and honest limits.</div>
+        <div class="mt-3 text-xs text-amd font-semibold uppercase tracking-wider">Read the methodology →</div>
+      </a>
+      <a href="https://github.com/vaatus/agentready" target="_blank" rel="noreferrer" class="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 transition-all hover:border-zinc-600">
+        <div class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Source code</div>
+        <div class="mt-1 text-lg font-semibold">github.com/vaatus/agentready</div>
+        <div class="mt-2 text-sm text-zinc-400">FastAPI + Next.js + 10 OWASP attack modules + Z3 contracts + chaos-remediation LoRA training scripts. MIT licensed.</div>
+        <div class="mt-3 text-xs text-zinc-300 font-semibold uppercase tracking-wider">Open the repo ↗</div>
+      </a>
+      <a href="https://huggingface.co/spaces/vaatus/agentready-judge-demo" target="_blank" rel="noreferrer" class="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 transition-all hover:border-zinc-600">
+        <div class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">🤗 Hugging Face Space</div>
+        <div class="mt-1 text-lg font-semibold">Judge verdict demo</div>
+        <div class="mt-2 text-sm text-zinc-400">Mirror of the heuristic Judge used in the pipeline. Paste a baseline reply, an attack reply, and the attack intent — get a verdict.</div>
+        <div class="mt-3 text-xs text-zinc-300 font-semibold uppercase tracking-wider">Try the Judge ↗</div>
+      </a>
+      <a href="https://huggingface.co/vaatus/agentready-chaos-remediation-lora-v0" target="_blank" rel="noreferrer" class="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 transition-all hover:border-zinc-600">
+        <div class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">🤗 Hugging Face Model</div>
+        <div class="mt-1 text-lg font-semibold">Chaos-remediation LoRA</div>
+        <div class="mt-2 text-sm text-zinc-400">Qwen 2.5 7B base + LoRA adapter trained on real chaos-remediation data. Fine-tuned on AMD MI300X via PEFT/TRL on ROCm.</div>
+        <div class="mt-3 text-xs text-zinc-300 font-semibold uppercase tracking-wider">View the model ↗</div>
+      </a>
+    </div>
+  </section>
+
+  <section class="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
+    <div class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">What we found</div>
+    <h2 class="mt-1 text-2xl font-bold tracking-tight">No famous AI agent lands in the low-risk band.</h2>
+    <p class="mt-2 max-w-3xl text-sm text-zinc-400">Across all 10 attack categories we run for real, every scored agent falls between moderate and elevated risk. The two biggest weak spots: getting tricked by fake memories and getting worn down by slow-burn manipulation over multiple turns.</p>
+    <div class="mt-5 space-y-2.5">
+      <div class="flex items-center gap-3 text-xs"><div class="w-36 font-mono text-zinc-400">≥ 80 · low risk</div><div class="flex-1 overflow-hidden rounded-full bg-zinc-900"><div class="h-2.5 bg-emerald-500" style="width: 0%"></div></div><div class="w-10 text-right font-mono text-base font-semibold tabular-nums text-zinc-200">0</div></div>
+      <div class="flex items-center gap-3 text-xs"><div class="w-36 font-mono text-zinc-400">70–79 · moderate</div><div class="flex-1 overflow-hidden rounded-full bg-zinc-900"><div class="h-2.5 bg-yellow-500" style="width: 0%"></div></div><div class="w-10 text-right font-mono text-base font-semibold tabular-nums text-zinc-200">0</div></div>
+      <div class="flex items-center gap-3 text-xs"><div class="w-36 font-mono text-zinc-400">60–69 · elevated</div><div class="flex-1 overflow-hidden rounded-full bg-zinc-900"><div class="h-2.5 bg-orange-500" style="width: 38%"></div></div><div class="w-10 text-right font-mono text-base font-semibold tabular-nums text-zinc-200">5</div></div>
+      <div class="flex items-center gap-3 text-xs"><div class="w-36 font-mono text-zinc-400">&lt; 60 · high risk</div><div class="flex-1 overflow-hidden rounded-full bg-zinc-900"><div class="h-2.5 bg-red-500" style="width: 62%"></div></div><div class="w-10 text-right font-mono text-base font-semibold tabular-nums text-zinc-200">8</div></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="mt-20 border-t border-zinc-900">
+  <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-6 py-6 text-xs text-zinc-500 md:flex-row">
+    <div>Powered by <span class="font-semibold text-zinc-300">AMD Instinct™ MI300X</span> · Built for the AMD Developer Hackathon · MIT licensed</div>
+    <div class="flex items-center gap-3">
+      <a href="https://huggingface.co/vaatus/agentready-chaos-remediation-lora-v0" target="_blank" rel="noreferrer" class="hover:text-zinc-300">🤗 LoRA</a>
+      <a href="https://huggingface.co/spaces/vaatus/agentready-judge-demo" target="_blank" rel="noreferrer" class="hover:text-zinc-300">🤗 Space</a>
+      <a href="https://github.com/vaatus/agentready" target="_blank" rel="noreferrer" class="hover:text-zinc-300">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
