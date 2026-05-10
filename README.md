@@ -2,7 +2,7 @@
 
 > **The public adversarial benchmark for AI agents.** We scan every famous open-source AI agent against OWASP ASI-2026, name the failures, then auto-fix them with formal verification, chaos engineering, and a real GitHub PR. Powered by AMD MI300X.
 
-[![Methodology](https://img.shields.io/badge/methodology-vaatus.github.io%2Fagentready-blue)](https://vaatus.github.io/agentready/methodology.html) [![HF Space](https://img.shields.io/badge/🤗-Judge%20Demo-yellow)](https://huggingface.co/spaces/vaatus/agentready-judge-demo) [![HF LoRA](https://img.shields.io/badge/🤗-Chaos%20LoRA-yellow)](https://huggingface.co/vaatus/agentready-chaos-remediation-lora-v0) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![AMD MI300X](https://img.shields.io/badge/Powered%20by-AMD%20MI300X-ED1C24)](https://www.amd.com/en/developer.html)
+[![Leaderboard](https://img.shields.io/badge/leaderboard-13%20agents%20tested-blue)](https://vaatus.github.io/agentready/leaderboard.html) [![Methodology](https://img.shields.io/badge/methodology-vaatus.github.io-blue)](https://vaatus.github.io/agentready/methodology.html) [![HF Space](https://img.shields.io/badge/🤗-Interactive%20Dashboard-yellow)](https://huggingface.co/spaces/vaatus/agentready-judge-demo) [![HF LoRA](https://img.shields.io/badge/🤗-Chaos%20LoRA-yellow)](https://huggingface.co/vaatus/agentready-chaos-remediation-lora-v0) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![AMD MI300X](https://img.shields.io/badge/Powered%20by-AMD%20MI300X-ED1C24)](https://www.amd.com/en/developer.html)
 
 AMD Developer Hackathon submission · [lablab.ai](https://lablab.ai/ai-hackathons/amd-developer) · May 2026
 
