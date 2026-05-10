@@ -158,9 +158,11 @@ async def run_asi06(
     red_llm: RedLLMClient | None = None,
     on_attack_done: Any = None,
 ) -> Asi06Result:
-    if not manifest.has_memory:
-        return Asi06Result(score=100.0, has_memory=False, memory_kind=None)
-
+    # Don't short-circuit on the manifest's `has_memory` flag. The substitute
+    # always runs as a chat session, so per-session memory is always present
+    # for the two-turn plant/trigger test — regardless of whether the agent
+    # has a vector store / KV store in production. The has_memory + memory_kind
+    # fields are still attached to the result for context.
     judge = judge or JudgeClient.from_settings()
 
     seeds_by_category = await tailor_pt_seeds(red_llm, manifest, _POISON_SEEDS)

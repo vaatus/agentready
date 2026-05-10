@@ -61,7 +61,9 @@ export function LeaderboardTable({ rows }: { rows: LeaderboardEntry[] }) {
                 {row.overall_score !== null ? row.overall_score.toFixed(1) : "—"}
               </td>
               <td className="px-4 py-3.5 text-xs text-zinc-500">
-                {row.last_scored_at ? new Date(row.last_scored_at).toLocaleString() : "queued"}
+                {row.last_scored_at
+                  ? `${new Date(row.last_scored_at).toISOString().slice(0, 10)} UTC`
+                  : "queued"}
               </td>
               <td className="px-4 py-3.5 text-right">
                 <a

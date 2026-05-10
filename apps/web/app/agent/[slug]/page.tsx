@@ -60,10 +60,10 @@ export default async function AgentPage({ params }: { params: { slug: string } }
           <h1 className="mt-1 text-5xl font-bold tracking-tight">{agent.name}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-zinc-400">
             <span className="rounded-full border border-zinc-800 px-2 py-0.5 font-mono text-xs">
-              {agent.framework}
+              {agent.framework ?? "unknown"}
             </span>
-            {agent.stars > 0 ? (
-              <span className="text-xs">⭐ {agent.stars.toLocaleString()}</span>
+            {typeof agent.stars === "number" && agent.stars > 0 ? (
+              <span className="text-xs">⭐ {agent.stars.toLocaleString("en-US")}</span>
             ) : null}
             <a
               href={agent.github_url}
@@ -88,7 +88,7 @@ export default async function AgentPage({ params }: { params: { slug: string } }
           </div>
           <div className="mt-2 text-xs text-zinc-500">
             {agent.last_scored_at
-              ? `Scored ${new Date(agent.last_scored_at).toLocaleString()}`
+              ? `Scored ${new Date(agent.last_scored_at).toISOString().slice(0, 16).replace("T", " ")} UTC`
               : "Awaiting first scan"}
           </div>
         </div>

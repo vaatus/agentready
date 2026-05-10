@@ -30,22 +30,44 @@ class AgentManifest:
 
 
 _FRAMEWORK_MARKERS: dict[str, list[str]] = {
-    "langgraph": ["langgraph", "from langgraph"],
+    "langgraph": ["langgraph", "from langgraph", "@langchain/langgraph"],
     "crewai": ["crewai", "from crewai"],
     "autogen": ["autogen", "pyautogen", "from autogen"],
-    "langchain": ["langchain", "from langchain"],
+    "langchain": ["langchain", "from langchain", "@langchain/"],
 }
 
 _MEMORY_MARKERS: dict[str, list[str]] = {
-    "vector": ["chromadb", "pinecone", "weaviate", "qdrant", "from chroma", "from pinecone"],
-    "conversation": ["ConversationBufferMemory", "ConversationSummaryMemory", "ChatMessageHistory"],
-    "persistent_kv": ["redis", "from redis", "json.dump", "shelve.open"],
+    "vector": [
+        "chromadb", "pinecone", "weaviate", "qdrant",
+        "from chroma", "from pinecone",
+        "@pinecone-database", "@qdrant/", "vectorstore", "VectorStore",
+    ],
+    "conversation": [
+        "ConversationBufferMemory", "ConversationSummaryMemory", "ChatMessageHistory",
+        "messages.push(", "conversationHistory", "BufferMemory", "ChatMemory",
+        "messages: ChatCompletionMessage",
+    ],
+    "persistent_kv": [
+        "redis", "from redis", "json.dump", "shelve.open",
+        "localStorage", "chrome.storage", "vscode.Memento",
+        "indexedDB", "AsyncStorage",
+        "writeFileSync", "fs.writeFile", "globalState.update", "workspaceState.update",
+    ],
 }
+
+# File extensions to scan during ingest. Includes Python (the original target)
+# plus TypeScript / JavaScript / Markdown / JSON so non-Python agents (Cline,
+# AgentGPT frontends, etc.) get their memory primitives + system prompts
+# detected.
+_INGEST_EXTENSIONS: tuple[str, ...] = (".py", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".md", ".mdx", ".json")
 
 _TOOL_NAME_RE = re.compile(r"@tool\s*(?:\([^)]*\))?\s*\ndef\s+(\w+)")
 _TOOL_INSTANCE_RE = re.compile(r"Tool\(\s*name\s*=\s*['\"](\w+)['\"]")
+# TypeScript / JS tool declarations: `name: "tool_name"` inside an object often
+# accompanied by `description:`, or `tool({name: "...",`.
+_TS_TOOL_RE = re.compile(r"name:\s*['\"]([a-z_][a-z0-9_-]{2,40})['\"]\s*,\s*description")
 _SYSTEM_PROMPT_RE = re.compile(
-    r"(?:system|SYSTEM_PROMPT|system_prompt)\s*=\s*[\"']{1,3}([^\"']+)[\"']{1,3}",
+    r"(?:system|SYSTEM_PROMPT|system_prompt|systemPrompt|SYSTEM)\s*[:=]\s*[\"'`]{1,3}([^\"'`]+)[\"'`]{1,3}",
     re.MULTILINE,
 )
 
@@ -92,7 +114,13 @@ def _detect_memory(haystack: str) -> tuple[bool, str | None]:
 
 
 def _extract_tools(haystack: str) -> list[str]:
-    return list({*_TOOL_NAME_RE.findall(haystack), *_TOOL_INSTANCE_RE.findall(haystack)})
+    return list(
+        {
+            *_TOOL_NAME_RE.findall(haystack),
+            *_TOOL_INSTANCE_RE.findall(haystack),
+            *_TS_TOOL_RE.findall(haystack),
+        }
+    )
 
 
 def _extract_system_prompt(haystack: str) -> str | None:
@@ -100,11 +128,18 @@ def _extract_system_prompt(haystack: str) -> str | None:
     return match.group(1).strip() if match else None
 
 
-def _read_python_files(root: Path, max_files: int = 200, max_bytes: int = 200_000) -> str:
+def _read_source_files(root: Path, max_files: int = 400, max_bytes: int = 600_000) -> str:
     chunks: list[str] = []
     total = 0
-    for path in root.rglob("*.py"):
-        if any(part in {".git", "venv", ".venv", "node_modules", "__pycache__"} for part in path.parts):
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        if path.suffix.lower() not in _INGEST_EXTENSIONS:
+            continue
+        if any(
+            part in {".git", "venv", ".venv", "node_modules", "__pycache__", "dist", "build", ".next"}
+            for part in path.parts
+        ):
             continue
         try:
             text = path.read_text(encoding="utf-8", errors="ignore")
@@ -130,7 +165,7 @@ async def ingest(github_url: str, slug: str | None = None) -> AgentManifest:
         clone_path.mkdir()
 
     sha = await _git_clone(github_url, clone_path)
-    haystack = _read_python_files(clone_path)
+    haystack = _read_source_files(clone_path)
 
     framework = _detect_framework(haystack)
     has_memory, memory_kind = _detect_memory(haystack)
