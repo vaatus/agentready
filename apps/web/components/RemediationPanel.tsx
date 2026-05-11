@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   artifactUrl,
@@ -22,39 +22,135 @@ const FILE_LABELS: Record<string, string> = {
   "CERTIFICATE.pdf": "Signed safety certificate (PDF)",
 };
 
+// Persist a "generating now" flag in localStorage so a page refresh during the
+// ~3-min POST /remediate stays on the spinner instead of resetting to the
+// previous bundle's "ready" state. Flag is auto-expired after 8 minutes
+// (long enough for the slowest remediation, short enough to not be sticky).
+const RUNNING_KEY = (slug: string) => `agentready:remediating:${slug}`;
+const RUNNING_TTL_MS = 8 * 60 * 1000;
+
+function readRunningFlag(slug: string): number | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(RUNNING_KEY(slug));
+  if (!raw) return null;
+  const ts = Number(raw);
+  if (!Number.isFinite(ts)) return null;
+  if (Date.now() - ts > RUNNING_TTL_MS) {
+    window.localStorage.removeItem(RUNNING_KEY(slug));
+    return null;
+  }
+  return ts;
+}
+
+function setRunningFlag(slug: string): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(RUNNING_KEY(slug), String(Date.now()));
+}
+
+function clearRunningFlag(slug: string): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(RUNNING_KEY(slug));
+}
+
+function generatedAtMs(b: RemediationBundle | null): number {
+  if (!b?.generated_at) return 0;
+  const t = Date.parse(b.generated_at);
+  return Number.isFinite(t) ? t : 0;
+}
+
 export function RemediationPanel({ slug }: { slug: string }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [bundle, setBundle] = useState<RemediationBundle | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const runningSinceRef = useRef<number | null>(null);
 
+  function stopPolling() {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }
+
+  function pollLatest(slugArg: string) {
+    stopPolling();
+    pollRef.current = setInterval(async () => {
+      try {
+        const b = await fetchLatestRemediation(slugArg);
+        if (b && generatedAtMs(b) >= (runningSinceRef.current ?? 0)) {
+          setBundle(b);
+          setPhase("ready");
+          clearRunningFlag(slugArg);
+          runningSinceRef.current = null;
+          stopPolling();
+        }
+      } catch {
+        /* keep polling */
+      }
+    }, 5000);
+  }
+
+  // Initial mount: figure out whether to land in "running" (refresh during
+  // an in-flight POST), "ready" (existing bundle), or "idle".
   useEffect(() => {
     let cancelled = false;
+    const since = readRunningFlag(slug);
+    runningSinceRef.current = since;
+
     fetchLatestRemediation(slug)
       .then((b) => {
         if (cancelled) return;
+        const bundleTs = generatedAtMs(b);
+        if (since && (!b || bundleTs < since)) {
+          // POST is still in flight server-side, stay on the spinner + poll.
+          setBundle(null);
+          setPhase("running");
+          pollLatest(slug);
+          return;
+        }
+        // Either no in-flight job or the latest bundle is already newer.
         setBundle(b);
         setPhase(b ? "ready" : "idle");
+        if (since) clearRunningFlag(slug);
       })
       .catch((e) => {
         if (cancelled) return;
+        if (since) {
+          // Can't fetch /latest but a job is presumed running — show spinner.
+          setPhase("running");
+          pollLatest(slug);
+          return;
+        }
         setError(e instanceof Error ? e.message : String(e));
         setPhase("error");
       });
+
     return () => {
       cancelled = true;
+      stopPolling();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   async function generate() {
     setPhase("running");
     setError(null);
+    setRunningFlag(slug);
+    runningSinceRef.current = Date.now();
     try {
       const b = await triggerRemediation(slug);
       setBundle(b);
       setPhase("ready");
+      clearRunningFlag(slug);
+      runningSinceRef.current = null;
+      stopPolling();
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setPhase("error");
+      // POST failed (timeout, network blip…) but the server might still be
+      // working. Stay on spinner and let the poller catch the result.
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+      // Keep phase "running" + keep the flag — the poller will recover.
+      pollLatest(slug);
     }
   }
 
@@ -89,16 +185,7 @@ export function RemediationPanel({ slug }: { slug: string }) {
       ) : null}
 
       {phase === "running" ? (
-        <div className="mt-4 overflow-hidden rounded-lg border border-amd/40 bg-amd/5 p-4">
-          <div className="flex items-center gap-3 text-sm text-zinc-200">
-            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amd" />
-            The 72B grading model is writing safety rules on our AMD GPU…
-          </div>
-          <div className="mt-2 text-xs text-zinc-500">
-            Usually 30–90 seconds · forks the agent&apos;s repo · pushes a branch · opens a
-            draft pull request.
-          </div>
-        </div>
+        <RunningCard runningSinceRef={runningSinceRef} />
       ) : null}
 
       {error ? (
@@ -219,4 +306,36 @@ export function RemediationPanel({ slug }: { slug: string }) {
 
 function stripDiffFences(s: string): string {
   return s.replace(/^```diff\n?/, "").replace(/```$/m, "").trim();
+}
+
+function RunningCard({
+  runningSinceRef,
+}: {
+  runningSinceRef: React.MutableRefObject<number | null>;
+}) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const since = runningSinceRef.current;
+  const elapsed = since ? Math.max(0, Math.floor((Date.now() - since) / 1000)) : 0;
+  const elapsedLabel =
+    elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
+
+  return (
+    <div className="mt-4 overflow-hidden rounded-lg border border-amd/40 bg-amd/5 p-4">
+      <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-200">
+        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amd" />
+        The 72B grading model is writing safety rules on our AMD GPU…
+        {since ? (
+          <span className="ml-auto font-mono text-xs text-zinc-500">{elapsedLabel} elapsed</span>
+        ) : null}
+      </div>
+      <div className="mt-2 text-xs text-zinc-500">
+        Usually 2–3 minutes · forks the agent&apos;s repo · pushes a branch · opens a real
+        pull request. Safe to refresh — we&apos;ll pick the result back up.
+      </div>
+    </div>
+  );
 }
