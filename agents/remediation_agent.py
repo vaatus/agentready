@@ -470,6 +470,15 @@ async def remediate(
         except Exception:  # noqa: BLE001
             logger.exception("unexpected error opening PR")
 
+    # Persist pr_url + post-fix score back into manifest.json on disk so the
+    # `/agent/{slug}/remediation/latest` endpoint reads the final state.
+    if bundle.pr_url or bundle.post_fix_asi06_score is not None:
+        manifest_json["pr_url"] = bundle.pr_url
+        manifest_json["post_fix_score"] = bundle.post_fix_asi06_score
+        manifest_json["pre_fix_asi06_score"] = bundle.pre_fix_asi06_score
+        manifest_json["post_fix_asi06_score"] = bundle.post_fix_asi06_score
+        (bundle_dir / "manifest.json").write_text(json.dumps(manifest_json, indent=2))
+
     if own_judge and hasattr(judge, "aclose"):
         try:
             await judge.aclose()

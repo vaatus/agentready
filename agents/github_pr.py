@@ -157,17 +157,22 @@ def open_pr(
             ],
             check=False,
         )
-        if out.returncode != 0 and "already exists" in (out.stderr or "").lower():
+        # On ANY failure (already-exists, 504, network blip…) try to find an
+        # existing open PR for this branch. We pushed the branch successfully,
+        # so a prior run may have already opened the PR.
+        if out.returncode != 0:
             existing = _run(
                 ["gh", "pr", "list",
                  "--repo", f"{ctx.user}/{repo}",
                  "--head", branch,
+                 "--state", "all",
                  "--json", "url",
                  "--jq", ".[0].url"],
+                check=False,
             ).stdout.strip()
             if existing:
+                logger.info("found existing PR for branch %s: %s", branch, existing)
                 return existing
-        if out.returncode != 0:
             raise GitHubPRError(f"gh pr create failed: {out.stderr}")
         url = out.stdout.strip().splitlines()[-1]
         return url
