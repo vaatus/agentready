@@ -78,14 +78,25 @@ export type RemediationBundle = {
   slug: string;
   scan_id: string;
   files: Record<string, string>;
-  pr_title: string;
-  pr_body: string;
-  diff_preview: string;
-  asi_categories_addressed: string[];
+  pr_title?: string;
+  pr_body?: string;
+  diff_preview?: string;
+  // Backend started returning `categories_addressed`; older payloads used
+  // `asi_categories_addressed`. Accept either; the UI normalizes via
+  // `categoriesAddressed(bundle)` in RemediationPanel.
+  categories_addressed?: string[];
+  asi_categories_addressed?: string[];
+  guard_rules?: Array<{ category: string; rule: string }>;
   patched_system_prompt?: string;
+  pre_fix_score?: number | null;
+  post_fix_score?: number | null;
   pre_fix_asi06_score?: number | null;
   post_fix_asi06_score?: number | null;
-  pr_url: string | null;
+  z3_status?: string | null;
+  github_url?: string | null;
+  generated_at?: string;
+  pr_url?: string | null;
+  pr_title_normalized?: string;
   artifact_url_prefix: string;
 };
 

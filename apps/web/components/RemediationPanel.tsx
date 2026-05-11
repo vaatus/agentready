@@ -135,37 +135,45 @@ export function RemediationPanel({ slug }: { slug: string }) {
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-xl border border-zinc-800 bg-black/40 p-4">
               <div className="text-[10px] uppercase tracking-wider text-zinc-500">Pull request title</div>
-              <div className="mt-1 font-mono text-sm">{bundle.pr_title}</div>
+              <div className="mt-1 font-mono text-sm">{bundle.pr_title ?? "—"}</div>
             </div>
             <div className="rounded-xl border border-zinc-800 bg-black/40 p-4">
               <div className="text-[10px] uppercase tracking-wider text-zinc-500">
                 Weak spots this fix patches
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {bundle.asi_categories_addressed.length > 0 ? (
-                  bundle.asi_categories_addressed.map((c) => (
-                    <span
-                      key={c}
-                      className="rounded-full border border-amd/40 bg-amd/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd"
-                    >
-                      {c}
+                {(() => {
+                  const cats =
+                    bundle.asi_categories_addressed ?? bundle.categories_addressed ?? [];
+                  return cats.length > 0 ? (
+                    cats.map((c) => (
+                      <span
+                        key={c}
+                        className="rounded-full border border-amd/40 bg-amd/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amd"
+                      >
+                        {c}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-zinc-500">
+                      none — agent passed every real attack
                     </span>
-                  ))
-                ) : (
-                  <span className="text-xs text-zinc-500">none — agent passed every real attack</span>
-                )}
+                  );
+                })()}
               </div>
             </div>
           </div>
 
-          <div>
-            <div className="mb-1 text-[10px] uppercase tracking-wider text-zinc-500">
-              Job description: before vs. after
+          {bundle.diff_preview ? (
+            <div>
+              <div className="mb-1 text-[10px] uppercase tracking-wider text-zinc-500">
+                Job description: before vs. after
+              </div>
+              <pre className="max-h-80 overflow-auto rounded-xl border border-zinc-800 bg-black/60 p-4 text-xs leading-relaxed text-zinc-300">
+                <code>{stripDiffFences(bundle.diff_preview)}</code>
+              </pre>
             </div>
-            <pre className="max-h-80 overflow-auto rounded-xl border border-zinc-800 bg-black/60 p-4 text-xs leading-relaxed text-zinc-300">
-              <code>{stripDiffFences(bundle.diff_preview)}</code>
-            </pre>
-          </div>
+          ) : null}
 
           <div>
             <div className="mb-2 text-[10px] uppercase tracking-wider text-zinc-500">
