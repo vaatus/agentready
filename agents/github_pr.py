@@ -143,6 +143,9 @@ def open_pr(
         # Open draft PR against the fork's default branch.
         body_path = work / ".pr_body.md"
         body_path.write_text(pr_body)
+        # Open as a real (non-draft) PR — drafts hide from notifications and look
+        # less "real" in the demo. The fork is in our namespace so opening a
+        # non-draft PR doesn't notify the upstream maintainer.
         out = _run(
             [
                 "gh", "pr", "create",
@@ -151,7 +154,6 @@ def open_pr(
                 "--head", branch,
                 "--title", pr_title,
                 "--body-file", str(body_path),
-                "--draft",
             ],
             check=False,
         )

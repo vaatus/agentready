@@ -200,30 +200,17 @@ export function RemediationPanel({ slug }: { slug: string }) {
             </div>
           </div>
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 text-xs">
-            {bundle.pr_url ? (
-              <div className="flex flex-col gap-1.5">
-                <div className="text-[10px] uppercase tracking-wider text-zinc-500">Public pull request</div>
-                <a
-                  href={bundle.pr_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-mono text-sm font-semibold text-amd hover:underline"
-                >
-                  {bundle.pr_url} ↗
-                </a>
-              </div>
-            ) : (
-              <div className="text-zinc-500">
-                Fix bundle written locally to{" "}
-                <code className="rounded bg-black/40 px-1 py-0.5 font-mono">
-                  data/remediations/{bundle.slug}/{bundle.scan_id}/
-                </code>
-                . Connect a GitHub token to open this as a real pull request against a fork of the
-                agent&apos;s repo.
-              </div>
-            )}
-          </div>
+          {bundle.pr_url ? (
+            <a
+              href={bundle.pr_url}
+              target="_blank"
+              rel="noreferrer"
+              className="block rounded-xl border border-amd/50 bg-amd/10 p-4 text-sm font-semibold text-amd transition-colors hover:border-amd hover:bg-amd/15"
+            >
+              <div className="text-[10px] uppercase tracking-wider text-amd/80">Public pull request — open on GitHub</div>
+              <div className="mt-1 font-mono text-base">{bundle.pr_url} ↗</div>
+            </a>
+          ) : null}
         </div>
       ) : null}
     </section>
